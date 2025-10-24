@@ -20,11 +20,6 @@ services:
       TRUSTED_PROXIES: "*"
     volumes:
       - invoiceshelf_storage:/var/www/html/storage
-    networks:
-      - invoiceshelf
-
-networks:
-  invoiceshelf:
 
 volumes:
   invoiceshelf_storage:
