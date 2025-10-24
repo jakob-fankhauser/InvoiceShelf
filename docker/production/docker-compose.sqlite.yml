@@ -20,7 +20,6 @@ services:
       TRUSTED_PROXIES: "*"
     volumes:
       - invoiceshelf_storage:/var/www/html/storage
-      - ./templates/pdf:/var/www/html/storage/templates/pdf:ro  
 
 volumes:
   invoiceshelf_storage:
