@@ -4,8 +4,6 @@ services:
     build:
       context: ../../
       dockerfile: docker/production/Dockerfile
-    ports:
-      - "8090:8080"
     volumes:
       - invoiceshelf_storage:/var/www/html/storage
     networks:
