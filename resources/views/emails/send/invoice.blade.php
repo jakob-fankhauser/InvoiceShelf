@@ -6,7 +6,7 @@
             <img class="header-logo"
      src="{{ asset($data['company']['logo']) }}"
      alt="{{ $data['company']['name'] }}"
-     style="height:70px;">
+     style="height:200px;">
         @else
             {{$data['company']['name']}}
         @endif

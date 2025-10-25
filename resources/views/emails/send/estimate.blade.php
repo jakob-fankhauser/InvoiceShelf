@@ -3,8 +3,10 @@
     @slot('header')
         @component('mail::header', ['url' => ''])
         @if($data['company']['logo'])
-            <img class="header-logo" src="{{asset($data['company']['logo'])}}" alt="{{$data['company']['name']}}">
-        @else
+            <img class="header-logo"
+     src="{{ asset($data['company']['logo']) }}"
+     alt="{{ $data['company']['name'] }}"
+     style="height:200px;">        @else
             {{$data['company']['name']}}
         @endif
         @endcomponent
