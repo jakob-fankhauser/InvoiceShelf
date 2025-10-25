@@ -19,6 +19,7 @@ use Nwidart\Modules\Facades\Module;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Vinkla\Hashids\Facades\Hashids;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class Invoice extends Model implements HasMedia
 {
@@ -579,6 +580,7 @@ class Invoice extends Model implements HasMedia
             'notes' => $this->getNotes(),
             'logo' => $logo ?? null,
             'taxes' => $taxes,
+            'qr_code' => $this->generatePaymentQRCode(),
         ]);
 
         $template = PdfTemplateUtils::findFormattedTemplate('invoice', $invoiceTemplate, '');
@@ -737,4 +739,28 @@ class Invoice extends Model implements HasMedia
 
         return true;
     }
+
+    private function generatePaymentQRCode()
+{
+    $fields = $this->fields ?? [];
+    $iban = isset($fields[1]) ? ($fields[1]->string_answer ?? $fields[1]->defaultAnswer ?? '') : '';
+    $bic = isset($fields[2]) ? ($fields[2]->string_answer ?? $fields[2]->defaultAnswer ?? '') : '';
+    
+    // EPC-QR-Code für SEPA-Überweisung
+    $epc = "BCD\n";           
+    $epc .= "002\n";          
+    $epc .= "1\n";            
+    $epc .= "SCT\n";          
+    $epc .= $bic . "\n";      
+    $epc .= "Jakob Fankhauser\n";  
+    $epc .= $iban . "\n";     
+    $epc .= "EUR" . number_format($this->total / 100, 2, '.', '') . "\n";
+    $epc .= "\n";             
+    $epc .= "\n";             
+    $epc .= "Rechnung " . $this->invoice_number;
+    
+    return 'data:image/png;base64,' . base64_encode(
+        QrCode::format('png')->size(200)->generate($epc)
+    );
+}
 }
