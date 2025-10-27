@@ -105,7 +105,7 @@
             line-height: 15px;
             color: #595959;
             margin-top: 5px;
-            width: 160px;
+            width: 250px;
             word-wrap: break-word;
         }
 
@@ -426,10 +426,19 @@
         <div class="main-content">
             <div class="customer-address-container">
                 <div class="billing-address-container billing-address">
-                    @if ($billing_address)
-                        <b>@lang('pdf_bill_to')</b> <br>
-                        {!! $billing_address !!}
+                    <b>@lang('pdf_bill_to')</b> <br>
+                @if($invoice->customer)
+                    <strong>{{ $invoice->customer->name }}</strong><br>
+                    @if($invoice->customer->billingAddress)
+                        @if($invoice->customer->billingAddress->address_street_1)
+                            {{ $invoice->customer->billingAddress->address_street_1 }}<br>
+                        @endif
+                        @if($invoice->customer->billingAddress->zip || $invoice->customer->billingAddress->city)
+                            {{ $invoice->customer->billingAddress->zip }} {{ $invoice->customer->billingAddress->city }}<br>
+                        @endif
+                        Österreich
                     @endif
+                @endif
                 </div>
 
                 <div style="clear: both;"></div>
