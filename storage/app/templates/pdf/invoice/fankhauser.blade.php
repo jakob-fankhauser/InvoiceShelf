@@ -436,7 +436,14 @@
                         @if($invoice->customer->billingAddress->zip || $invoice->customer->billingAddress->city)
                             {{ $invoice->customer->billingAddress->zip }} {{ $invoice->customer->billingAddress->city }}<br>
                         @endif
-                        Österreich
+                        @if($invoice->customer->billingAddress->country)
+                            @php
+                                $countryCode = $invoice->customer->billingAddress->country->code ?? null;
+                                $countryNamesDE = ['AT' => 'Österreich', 'DE' => 'Deutschland'];
+                                $countryName = $countryNamesDE[$countryCode] ?? $invoice->customer->billingAddress->country->name ?? '';
+                            @endphp
+                            {{ $countryName }}
+                        @endif
                     @endif
                 @endif
                 </div>
