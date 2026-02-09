@@ -1,5 +1,69 @@
 <template>
-  <form id="loginForm" class="mt-12 text-left" @submit.prevent="onSubmit">
+  <!-- Two-Factor Challenge -->
+  <form
+    v-if="authStore.requiresTwoFactor"
+    id="twoFactorForm"
+    class="mt-12 text-left"
+    @submit.prevent="onTwoFactorSubmit"
+  >
+    <div class="mb-4 text-sm text-gray-600">
+      {{ useRecoveryCode
+        ? 'Please enter one of your recovery codes.'
+        : 'Please enter the authentication code from your authenticator app.'
+      }}
+    </div>
+
+    <BaseInputGroup
+      v-if="!useRecoveryCode"
+      :error="twoFactorError"
+      label="Authentication Code"
+      class="mb-4"
+      required
+    >
+      <BaseInput
+        v-model="twoFactorCode"
+        focus
+        type="text"
+        inputmode="numeric"
+        autocomplete="one-time-code"
+        name="code"
+        placeholder="000000"
+        maxlength="6"
+      />
+    </BaseInputGroup>
+
+    <BaseInputGroup
+      v-else
+      :error="twoFactorError"
+      label="Recovery Code"
+      class="mb-4"
+      required
+    >
+      <BaseInput
+        v-model="recoveryCode"
+        focus
+        type="text"
+        name="recovery_code"
+      />
+    </BaseInputGroup>
+
+    <div class="mt-3 mb-6">
+      <a
+        href="#"
+        class="text-sm text-primary-400 hover:text-gray-700"
+        @click.prevent="useRecoveryCode = !useRecoveryCode"
+      >
+        {{ useRecoveryCode ? 'Use authentication code' : 'Use a recovery code' }}
+      </a>
+    </div>
+
+    <BaseButton :loading="isLoading" type="submit">
+      Verify
+    </BaseButton>
+  </form>
+
+  <!-- Standard Login -->
+  <form v-else id="loginForm" class="mt-12 text-left" @submit.prevent="onSubmit">
     <BaseInputGroup
       :error="v$.email.$error && v$.email.$errors[0].$message"
       :label="$t('login.email')"
@@ -73,6 +137,11 @@ const router = useRouter()
 const isLoading = ref(false)
 let isShowPassword = ref(false)
 
+const twoFactorCode = ref('')
+const recoveryCode = ref('')
+const useRecoveryCode = ref(false)
+const twoFactorError = ref('')
+
 const rules = {
   email: {
     required: helpers.withMessage(t('validation.required'), required),
@@ -110,6 +179,11 @@ async function onSubmit() {
     isLoading.value = true
     await authStore.login(authStore.loginData)
 
+    if (authStore.requiresTwoFactor) {
+      isLoading.value = false
+      return
+    }
+
     router.push('/admin/dashboard')
 
     notificationStore.showNotification({
@@ -117,6 +191,29 @@ async function onSubmit() {
       message: 'Logged in successfully.',
     })
   } catch (error) {
+    isLoading.value = false
+  }
+}
+
+async function onTwoFactorSubmit() {
+  twoFactorError.value = ''
+  isLoading.value = true
+
+  const data = useRecoveryCode.value
+    ? { recovery_code: recoveryCode.value }
+    : { code: twoFactorCode.value }
+
+  try {
+    await authStore.verifyTwoFactor(data)
+
+    router.push('/admin/dashboard')
+
+    notificationStore.showNotification({
+      type: 'success',
+      message: 'Logged in successfully.',
+    })
+  } catch (error) {
+    twoFactorError.value = 'The provided code is invalid.'
     isLoading.value = false
   }
 }

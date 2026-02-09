@@ -36,7 +36,6 @@ FROM base AS production
     COPY --from=static_builder --chown=www-data:www-data /var/www/html/public /var/www/html/public
     COPY --chown=www-data:www-data . /var/www/html
     RUN composer install --prefer-dist --no-dev --optimize-autoloader
-    RUN composer require simplesoftwareio/simple-qrcode
 
     # Copy entrypoint and inject script, and make sure they are executable
     COPY --chmod=755 docker/production/inject.sh /inject.sh

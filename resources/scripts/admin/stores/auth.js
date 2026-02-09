@@ -11,6 +11,7 @@ export const useAuthStore = (useWindow = false) => {
     id: 'auth',
     state: () => ({
       status: '',
+      requiresTwoFactor: false,
 
       loginData: {
         email: '',
@@ -35,11 +36,31 @@ export const useAuthStore = (useWindow = false) => {
                   }, 1000)
                 })
                 .catch((err) => {
-                  handleError(err)
-                  reject(err)
+                  if (err.response && err.response.status === 423) {
+                    this.requiresTwoFactor = true
+                    resolve(err.response)
+                  } else {
+                    handleError(err)
+                    reject(err)
+                  }
                 })
             }
           })
+        })
+      },
+
+      verifyTwoFactor(data) {
+        return new Promise((resolve, reject) => {
+          axios
+            .post('/two-factor-challenge', data)
+            .then((response) => {
+              this.requiresTwoFactor = false
+              resolve(response)
+            })
+            .catch((err) => {
+              handleError(err)
+              reject(err)
+            })
         })
       },
 

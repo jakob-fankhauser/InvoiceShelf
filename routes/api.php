@@ -3,6 +3,7 @@
 use App\Http\Controllers\AppVersionController;
 use App\Http\Controllers\V1\Admin\Auth\ForgotPasswordController;
 use App\Http\Controllers\V1\Admin\Auth\ResetPasswordController;
+use App\Http\Controllers\V1\Admin\Auth\TwoFactorController;
 use App\Http\Controllers\V1\Admin\Backup\BackupsController;
 use App\Http\Controllers\V1\Admin\Backup\DownloadBackupController;
 use App\Http\Controllers\V1\Admin\Company\CompaniesController;
@@ -370,6 +371,10 @@ Route::prefix('/v1')->group(function () {
             Route::put('/me/settings', UpdateUserSettingsController::class);
 
             Route::post('/me/upload-avatar', [CompanyController::class, 'uploadAvatar']);
+
+            Route::post('/me/two-factor/enable', [TwoFactorController::class, 'enable']);
+            Route::post('/me/two-factor/confirm', [TwoFactorController::class, 'confirm']);
+            Route::post('/me/two-factor/disable', [TwoFactorController::class, 'disable']);
 
             Route::put('/company', [CompanyController::class, 'updateCompany']);
 

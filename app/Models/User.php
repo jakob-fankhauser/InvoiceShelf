@@ -46,6 +46,8 @@ class User extends Authenticatable implements HasMedia
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
     ];
 
     protected $with = [
@@ -56,6 +58,17 @@ class User extends Authenticatable implements HasMedia
         'formattedCreatedAt',
         'avatar',
     ];
+
+    protected $casts = [
+        'two_factor_secret' => 'encrypted',
+        'two_factor_recovery_codes' => 'encrypted',
+        'two_factor_confirmed_at' => 'datetime',
+    ];
+
+    public function hasTwoFactorEnabled(): bool
+    {
+        return ! is_null($this->two_factor_confirmed_at);
+    }
 
     /**
      * Find the user instance for the given username.

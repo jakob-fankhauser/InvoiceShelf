@@ -94,12 +94,120 @@
       </BaseButton>
     </BaseSettingCard>
   </form>
+
+  <!-- Two-Factor Authentication Section -->
+  <div class="mt-6">
+    <BaseSettingCard
+      title="Two-Factor Authentication"
+      description="Add additional security to your account using two-factor authentication."
+    >
+      <!-- 2FA is enabled -->
+      <div v-if="userStore.currentUser && userStore.currentUser.two_factor_enabled">
+        <p class="text-sm text-green-600 mb-4">
+          Two-factor authentication is enabled.
+        </p>
+        <div>
+          <BaseInputGroup
+            label="Password"
+            :error="disableError"
+            class="mb-4 max-w-md"
+          >
+            <BaseInput
+              v-model="disablePassword"
+              type="password"
+              placeholder="Enter your password to disable 2FA"
+            />
+          </BaseInputGroup>
+          <BaseButton
+            variant="danger"
+            :loading="isDisabling"
+            @click="disableTwoFactor"
+          >
+            Disable Two-Factor Authentication
+          </BaseButton>
+        </div>
+      </div>
+
+      <!-- 2FA setup flow -->
+      <div v-else>
+        <!-- Step 1: Not started -->
+        <div v-if="setupStep === 'idle'">
+          <p class="text-sm text-gray-600 mb-4">
+            When two-factor authentication is enabled, you will be prompted for a secure, random token during authentication.
+            You can use your phone's authenticator app (like Apple Passwords, Google Authenticator, or Authy).
+          </p>
+          <BaseButton :loading="isEnabling" @click="enableTwoFactor">
+            Enable Two-Factor Authentication
+          </BaseButton>
+        </div>
+
+        <!-- Step 2: Show QR Code -->
+        <div v-if="setupStep === 'qr'">
+          <p class="text-sm text-gray-600 mb-4">
+            Scan this QR code with your authenticator app, then enter the 6-digit code below to confirm.
+          </p>
+          <div class="flex flex-col items-center mb-6">
+            <div
+              class="p-4 bg-white border rounded-lg mb-4"
+              v-html="qrCodeSvg"
+            ></div>
+            <p class="text-xs text-gray-500 text-center">
+              Or enter this code manually:
+              <code class="block mt-1 text-sm font-mono bg-gray-100 px-2 py-1 rounded select-all">{{ secret }}</code>
+            </p>
+          </div>
+          <BaseInputGroup
+            label="Verification Code"
+            :error="confirmError"
+            class="mb-4 max-w-md"
+          >
+            <BaseInput
+              v-model="confirmCode"
+              type="text"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              placeholder="000000"
+              maxlength="6"
+            />
+          </BaseInputGroup>
+          <BaseButton :loading="isConfirming" @click="confirmTwoFactor">
+            Confirm
+          </BaseButton>
+        </div>
+
+        <!-- Step 3: Show Recovery Codes -->
+        <div v-if="setupStep === 'recovery'">
+          <p class="text-sm text-green-600 mb-2">
+            Two-factor authentication has been enabled!
+          </p>
+          <p class="text-sm text-gray-600 mb-4">
+            Store these recovery codes in a secure place. They can be used to access your account if you lose your authenticator device.
+            Each code can only be used once.
+          </p>
+          <div class="bg-gray-100 rounded-lg p-4 mb-4 max-w-md">
+            <code
+              v-for="code in recoveryCodes"
+              :key="code"
+              class="block text-sm font-mono py-0.5"
+            >
+              {{ code }}
+            </code>
+          </div>
+          <BaseButton @click="finishSetup">
+            Done
+          </BaseButton>
+        </div>
+      </div>
+    </BaseSettingCard>
+  </div>
 </template>
 
 <script setup>
+import axios from 'axios'
 import { ref, computed, reactive } from 'vue'
 import { useGlobalStore } from '@/scripts/admin/stores/global'
 import { useUserStore } from '@/scripts/admin/stores/user'
+import { useNotificationStore } from '@/scripts/stores/notification'
 import { useI18n } from 'vue-i18n'
 import {
   helpers,
@@ -110,16 +218,31 @@ import {
 } from '@vuelidate/validators'
 import { useVuelidate } from '@vuelidate/core'
 import { useCompanyStore } from '@/scripts/admin/stores/company'
+import { handleError } from '@/scripts/helpers/error-handling'
 
 const userStore = useUserStore()
 const globalStore = useGlobalStore()
 const companyStore = useCompanyStore()
+const notificationStore = useNotificationStore()
 const { t } = useI18n()
 
 let isSaving = ref(false)
 let avatarFileBlob = ref(null)
 let imgFiles = ref([])
 const isAdminAvatarRemoved = ref(false)
+
+// 2FA state
+const setupStep = ref('idle')
+const qrCodeSvg = ref('')
+const secret = ref('')
+const confirmCode = ref('')
+const confirmError = ref('')
+const recoveryCodes = ref([])
+const isEnabling = ref(false)
+const isConfirming = ref(false)
+const isDisabling = ref(false)
+const disablePassword = ref('')
+const disableError = ref('')
 
 if (userStore.currentUser.avatar) {
   imgFiles.value.push({
@@ -235,5 +358,63 @@ async function updateUserData() {
     isSaving.value = false
     return true
   }
+}
+
+// 2FA methods
+async function enableTwoFactor() {
+  isEnabling.value = true
+  try {
+    const response = await axios.post('/api/v1/me/two-factor/enable')
+    qrCodeSvg.value = response.data.qr_code_svg
+    secret.value = response.data.secret
+    setupStep.value = 'qr'
+  } catch (err) {
+    handleError(err)
+  }
+  isEnabling.value = false
+}
+
+async function confirmTwoFactor() {
+  confirmError.value = ''
+  isConfirming.value = true
+  try {
+    const response = await axios.post('/api/v1/me/two-factor/confirm', {
+      code: confirmCode.value,
+    })
+    recoveryCodes.value = response.data.recovery_codes
+    setupStep.value = 'recovery'
+    await userStore.fetchCurrentUser()
+  } catch (err) {
+    confirmError.value = 'The provided code is invalid.'
+  }
+  isConfirming.value = false
+}
+
+async function disableTwoFactor() {
+  disableError.value = ''
+  isDisabling.value = true
+  try {
+    await axios.post('/api/v1/me/two-factor/disable', {
+      password: disablePassword.value,
+    })
+    disablePassword.value = ''
+    await userStore.fetchCurrentUser()
+    notificationStore.showNotification({
+      type: 'success',
+      message: 'Two-factor authentication has been disabled.',
+    })
+  } catch (err) {
+    disableError.value = 'The provided password is incorrect.'
+  }
+  isDisabling.value = false
+}
+
+function finishSetup() {
+  setupStep.value = 'idle'
+  confirmCode.value = ''
+  notificationStore.showNotification({
+    type: 'success',
+    message: 'Two-factor authentication has been enabled.',
+  })
 }
 </script>

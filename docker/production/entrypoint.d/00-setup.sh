@@ -45,3 +45,6 @@ if ! grep -q '^APP_KEY=[^[:space:]]' /var/www/html/.env; then
     echo "**** Generating new APP_KEY variable ****"
     ./artisan key:generate -n
 fi
+
+echo "**** Running database migrations ****"
+./artisan migrate --force
