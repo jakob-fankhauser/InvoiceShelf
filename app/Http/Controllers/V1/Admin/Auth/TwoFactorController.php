@@ -31,7 +31,7 @@ class TwoFactorController extends Controller
             $secret
         );
 
-        $qrCodeSvg = QrCode::format('svg')->size(200)->generate($qrCodeUrl);
+        $qrCodeSvg = (string) QrCode::format('svg')->size(200)->generate($qrCodeUrl);
 
         return response()->json([
             'secret' => $secret,
