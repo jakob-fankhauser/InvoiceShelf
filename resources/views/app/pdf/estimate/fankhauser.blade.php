@@ -425,8 +425,9 @@
     <div class="content-wrapper">
         <div class="main-content">
             <div class="customer-address-container">
+                <div style="font-size: 18px; font-weight: bold; color: #00C2A8; margin-bottom: 8px; letter-spacing: 0.05em;">ANGEBOT</div>
                 <div class="billing-address-container billing-address">
-                    <b>@lang('pdf_bill_to')</b> <br>
+                    <b>An:</b> <br>
                 @if($estimate->customer)
                     <strong>{{ $estimate->customer->name }}</strong><br>
                     @if($estimate->customer->billingAddress)
