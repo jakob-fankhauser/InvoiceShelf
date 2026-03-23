@@ -653,8 +653,14 @@
 
 
        {{-- Footer with bank and contact info --}}
+{{-- Estimates don't have their own custom fields for bank details, so we read from Invoice custom field defaults --}}
 @php
-    $fields = $estimate->fields ?? [];
+    $fields = $estimate->fields;
+    if ($fields->isEmpty()) {
+        $fields = \App\Models\CustomField::where('model_type', 'Invoice')
+            ->where('company_id', $estimate->company_id)
+            ->get();
+    }
     $bank_name = isset($fields[0]) ? ($fields[0]->string_answer ?? $fields[0]->defaultAnswer ?? '') : '';
     $iban = isset($fields[1]) ? ($fields[1]->string_answer ?? $fields[1]->defaultAnswer ?? '') : '';
     $bic = isset($fields[2]) ? ($fields[2]->string_answer ?? $fields[2]->defaultAnswer ?? '') : '';
