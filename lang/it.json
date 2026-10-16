@@ -29,6 +29,8 @@
     "to_date": "Alla Data",
     "from": "Da",
     "to": "A",
+    "cc": "CC",
+    "bcc": "BCC",
     "ok": "Ok",
     "yes": "Sì",
     "no": "No",
@@ -306,7 +308,7 @@
     "total": "Totale",
     "discount": "Sconto",
     "sub_total": "Sub Totale",
-    "net_total": "Net",
+    "net_total": "Imponibile",
     "estimate_number": "Preventivo Numero",
     "ref_number": "Numero di Riferimento",
     "contact": "Contatto",
@@ -650,6 +652,7 @@
     "currency": "Valuta",
     "contact": "Contatto",
     "category": "Categoria",
+    "uncategorized": "Uncategorized",
     "from_date": "Dalla Data",
     "to_date": "Alla Data",
     "expense_date": "Data",
@@ -919,7 +922,7 @@
       "papersize": "Dimensioni del foglio",
       "papersize_hint": "Dimensioni del foglio in larghezza e altezza (Es. \"210mm 297mm\")",
       "gotenberg_host": "Gotenberg service host",
-      "pdf_variables_save_successfully": "PDF configuration saved successfully",
+      "pdf_variables_save_successfully": "Configurazione PDF salvata correttamente",
       "pdf_variables_save_error": "La configurazione PDF non può essere salvata"
     },
     "company_info": {
@@ -1324,7 +1327,8 @@
       "finishing_update": "Aggiornamento di finitura",
       "update_failed": "Aggiornamento non riuscito",
       "update_failed_text": "Scusate! L'aggiornamento non è riuscito il: passaggio {step}",
-      "update_warning": "Tutti i file dell'applicazione e i file dei modelli predefiniti verranno sovrascritti quando si aggiorna l'applicazione tramite questa utility. Si prega di eseguire un backup dei modelli e del database prima di effettuare l'aggiornamento."
+      "update_warning": "Tutti i file dell'applicazione e i file dei modelli predefiniti verranno sovrascritti quando si aggiorna l'applicazione tramite questa utility. Si prega di eseguire un backup dei modelli e del database prima di effettuare l'aggiornamento.",
+      "requirements_not_met": "Update cannot continue because some system requirements are not met (including minimum PHP version). Please fix the failed requirements and try again."
     },
     "backup": {
       "title": "Backup | Backups",
@@ -1646,6 +1650,7 @@
   "pdf_total_tax_label": "TOTALE IMPOSTA",
   "pdf_tax_types_label": "Tipi di Tasse",
   "pdf_expenses_label": "Uscite",
+  "pdf_expense_group_total_label": "Group total:",
   "pdf_bill_to": "Fattura a,",
   "pdf_ship_to": "Invia a,",
   "pdf_received_from": "Ricevuto da:",

@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\CompanySetting;
 use App\Models\Customer;
+use App\Support\MoneyConversion;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -28,6 +29,7 @@ class PaymentRequest extends FormRequest
             ],
             'customer_id' => [
                 'required',
+                Rule::exists('customers', 'id')->where('company_id', $this->header('company')),
             ],
             'exchange_rate' => [
                 'nullable',
@@ -39,11 +41,15 @@ class PaymentRequest extends FormRequest
                 'required',
                 Rule::unique('payments')->where('company_id', $this->header('company')),
             ],
+            // The invoice is loaded and its balance changed without any further
+            // check, so it must belong to the company the request is for.
             'invoice_id' => [
                 'nullable',
+                Rule::exists('invoices', 'id')->where('company_id', $this->header('company')),
             ],
             'payment_method_id' => [
                 'nullable',
+                Rule::exists('payment_methods', 'id')->where('company_id', $this->header('company')),
             ],
             'notes' => [
                 'nullable',
@@ -86,7 +92,7 @@ class PaymentRequest extends FormRequest
                 'creator_id' => $this->user()->id,
                 'company_id' => $this->header('company'),
                 'exchange_rate' => $exchange_rate,
-                'base_amount' => $this->amount * $exchange_rate,
+                'base_amount' => MoneyConversion::toBaseMinor($this->amount, $exchange_rate),
                 'currency_id' => $currency,
             ])
             ->toArray();

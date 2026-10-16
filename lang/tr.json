@@ -29,6 +29,8 @@
     "to_date": "Bitiş tarihi",
     "from": "Gönderen",
     "to": "Alıcı",
+    "cc": "CC",
+    "bcc": "BCC",
     "ok": "Tamam",
     "yes": "Evet",
     "no": "Hayır",
@@ -650,6 +652,7 @@
     "currency": "Currency",
     "contact": "İletişim",
     "category": "Kategori",
+    "uncategorized": "Uncategorized",
     "from_date": "Başlangıç tarihi",
     "to_date": "Bitiş tarihi",
     "expense_date": "Tarih",
@@ -1324,7 +1327,8 @@
       "finishing_update": "Güncelleme tamamlanıyor",
       "update_failed": "Güncelleştirme Başarısız",
       "update_failed_text": "Üzgünüz! Güncelleştirmeniz :{step} adımında başarısız oldu",
-      "update_warning": "Uygulamayı bu araçla güncellediğinizde tüm uygulama dosyaları ve varsayılan şablon dosyaları üzerine yazılacaktır. Güncellemeden önce şablonlarınızın ve veritabanınızın yedeğini almayı unutmayın."
+      "update_warning": "Uygulamayı bu araçla güncellediğinizde tüm uygulama dosyaları ve varsayılan şablon dosyaları üzerine yazılacaktır. Güncellemeden önce şablonlarınızın ve veritabanınızın yedeğini almayı unutmayın.",
+      "requirements_not_met": "Update cannot continue because some system requirements are not met (including minimum PHP version). Please fix the failed requirements and try again."
     },
     "backup": {
       "title": "Yedek | Yedekler",
@@ -1646,6 +1650,7 @@
   "pdf_total_tax_label": "TOPLAM VERGİ",
   "pdf_tax_types_label": "Vergi Türleri",
   "pdf_expenses_label": "Giderler",
+  "pdf_expense_group_total_label": "Group total:",
   "pdf_bill_to": "Fatura Adresi,",
   "pdf_ship_to": "Teslimat Adresi,",
   "pdf_received_from": "Alındığı Kişi:",

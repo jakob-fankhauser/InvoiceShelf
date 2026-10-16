@@ -29,6 +29,8 @@
     "to_date": "Päivään",
     "from": "Lähettäjä",
     "to": "Vastaanottaja",
+    "cc": "CC",
+    "bcc": "BCC",
     "ok": "OK",
     "yes": "Kyllä",
     "no": "Ei",
@@ -650,6 +652,7 @@
     "currency": "Valuutta",
     "contact": "Yhteyshenkilö",
     "category": "Luokka",
+    "uncategorized": "Uncategorized",
     "from_date": "Päivästä",
     "to_date": "Päivään",
     "expense_date": "Päivämäärä",
@@ -1324,7 +1327,8 @@
       "finishing_update": "Lopetetaan päivitys",
       "update_failed": "Päivitys epäonnistui",
       "update_failed_text": "Sorry! Päivityksesi epäonnistui : {step} vaiheessa",
-      "update_warning": "All of the application files and default template files will be overwritten when you update the application using this utility. Please take a backup of your templates & database before updating."
+      "update_warning": "All of the application files and default template files will be overwritten when you update the application using this utility. Please take a backup of your templates & database before updating.",
+      "requirements_not_met": "Update cannot continue because some system requirements are not met (including minimum PHP version). Please fix the failed requirements and try again."
     },
     "backup": {
       "title": "Varmuuskopio | Varmuuskopiot",
@@ -1646,6 +1650,7 @@
   "pdf_total_tax_label": "ALV YHTEENSÄ",
   "pdf_tax_types_label": "ALV Verokannat",
   "pdf_expenses_label": "Kulut",
+  "pdf_expense_group_total_label": "Group total:",
   "pdf_bill_to": "Laskutetaan,",
   "pdf_ship_to": "Toimitetaan,",
   "pdf_received_from": "Vastaanotettu:",

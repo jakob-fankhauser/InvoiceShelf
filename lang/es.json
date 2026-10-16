@@ -29,6 +29,8 @@
     "to_date": "Hasta la fecha",
     "from": "De",
     "to": "A",
+    "cc": "CC",
+    "bcc": "BCC",
     "ok": "De acuerdo",
     "yes": "Sí",
     "no": "No",
@@ -650,6 +652,7 @@
     "currency": "Divisa",
     "contact": "Contacto",
     "category": "Categoría",
+    "uncategorized": "Uncategorized",
     "from_date": "Desde la fecha",
     "to_date": "Hasta la fecha",
     "expense_date": "Fecha",
@@ -1324,7 +1327,8 @@
       "finishing_update": "Actualización final",
       "update_failed": "Actualización fallida",
       "update_failed_text": "¡Lo siento! Su actualización falló el: {step} paso",
-      "update_warning": "Todos los archivos y temas predeterminados se sobreescribirán cuando actualice la aplicación a través de esta utilidad. Por favor, cree una copia de seguridad de sus temas y base de datos antes de actualizar."
+      "update_warning": "Todos los archivos y temas predeterminados se sobreescribirán cuando actualice la aplicación a través de esta utilidad. Por favor, cree una copia de seguridad de sus temas y base de datos antes de actualizar.",
+      "requirements_not_met": "Update cannot continue because some system requirements are not met (including minimum PHP version). Please fix the failed requirements and try again."
     },
     "backup": {
       "title": "Copia de seguridad | Copias de seguridad",
@@ -1646,6 +1650,7 @@
   "pdf_total_tax_label": "IMPUESTO TOTAL",
   "pdf_tax_types_label": "Tipos de impuestos",
   "pdf_expenses_label": "Gastos",
+  "pdf_expense_group_total_label": "Group total:",
   "pdf_bill_to": "Cobrar a,",
   "pdf_ship_to": "Enviar a,",
   "pdf_received_from": "Recibido de:",

@@ -29,6 +29,8 @@
     "to_date": "Datums līdz",
     "from": "No",
     "to": "Kam",
+    "cc": "CC",
+    "bcc": "BCC",
     "ok": "Labi",
     "yes": "Jā",
     "no": "Nē",
@@ -650,6 +652,7 @@
     "currency": "Currency",
     "contact": "Kontakti",
     "category": "Kategorija",
+    "uncategorized": "Uncategorized",
     "from_date": "Datums no",
     "to_date": "Datums līdz",
     "expense_date": "Datums",
@@ -1324,7 +1327,8 @@
       "finishing_update": "Pabeidz atjauninājumu",
       "update_failed": "Atjaunināšana neizdevās",
       "update_failed_text": "Atvainojiet! Jūsu atjauninājuma laikā notika kļūda: {step}. solī",
-      "update_warning": "All of the application files and default template files will be overwritten when you update the application using this utility. Please take a backup of your templates & database before updating."
+      "update_warning": "All of the application files and default template files will be overwritten when you update the application using this utility. Please take a backup of your templates & database before updating.",
+      "requirements_not_met": "Update cannot continue because some system requirements are not met (including minimum PHP version). Please fix the failed requirements and try again."
     },
     "backup": {
       "title": "Backup | Backups",
@@ -1646,6 +1650,7 @@
   "pdf_total_tax_label": "NODOKĻI KOPĀ",
   "pdf_tax_types_label": "Nodokļu veidi",
   "pdf_expenses_label": "Izdevumi",
+  "pdf_expense_group_total_label": "Group total:",
   "pdf_bill_to": "Saņēmējs,",
   "pdf_ship_to": "Piegādes adrese,",
   "pdf_received_from": "Saņemts no:",

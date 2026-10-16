@@ -4,10 +4,10 @@ namespace App\Mail;
 
 use App\Models\EmailLog;
 use App\Models\Estimate;
+use App\Support\PublicToken;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use Vinkla\Hashids\Facades\Hashids;
 
 class SendEstimateMail extends Mailable
 {
@@ -36,13 +36,15 @@ class SendEstimateMail extends Mailable
         $log = EmailLog::create([
             'from' => $this->data['from'],
             'to' => $this->data['to'],
+            'cc' => $this->data['cc'] ?? null,
+            'bcc' => $this->data['bcc'] ?? null,
             'subject' => $this->data['subject'],
             'body' => $this->data['body'],
             'mailable_type' => Estimate::class,
             'mailable_id' => $this->data['estimate']['id'],
         ]);
 
-        $log->token = Hashids::connection(EmailLog::class)->encode($log->id);
+        $log->token = PublicToken::make();
         $log->save();
 
         $this->data['url'] = route('estimate', ['email_log' => $log->token]);

@@ -29,6 +29,8 @@
     "to_date": "終了日",
     "from": "From",
     "to": "To",
+    "cc": "CC",
+    "bcc": "BCC",
     "ok": "はい",
     "yes": "はい",
     "no": "いいえ",
@@ -650,6 +652,7 @@
     "currency": "通貨",
     "contact": "連絡先",
     "category": "カテゴリ",
+    "uncategorized": "Uncategorized",
     "from_date": "開始日",
     "to_date": "終了日",
     "expense_date": "日時",
@@ -1324,7 +1327,8 @@
       "finishing_update": "アップデート完了",
       "update_failed": "アップデートに失敗しました",
       "update_failed_text": "申し訳ありません。更新に失敗しました: {step} ステップ",
-      "update_warning": "このユーティリティを使用してアプリケーションを更新するとすべてのアプリケーションファイルと既定のテンプレートファイルが上書きされます。更新する前にテンプレートとデータベースのバックアップを作成してください。"
+      "update_warning": "このユーティリティを使用してアプリケーションを更新するとすべてのアプリケーションファイルと既定のテンプレートファイルが上書きされます。更新する前にテンプレートとデータベースのバックアップを作成してください。",
+      "requirements_not_met": "Update cannot continue because some system requirements are not met (including minimum PHP version). Please fix the failed requirements and try again."
     },
     "backup": {
       "title": "バックアップ | バックアップ",
@@ -1646,6 +1650,7 @@
   "pdf_total_tax_label": "合計税額",
   "pdf_tax_types_label": "税の種類",
   "pdf_expenses_label": "支出",
+  "pdf_expense_group_total_label": "Group total:",
   "pdf_bill_to": "請求先",
   "pdf_ship_to": "配送先",
   "pdf_received_from": "受信元:",

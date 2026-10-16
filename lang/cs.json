@@ -29,6 +29,8 @@
     "to_date": "Do data",
     "from": "Od",
     "to": "Do",
+    "cc": "CC",
+    "bcc": "BCC",
     "ok": "Ok",
     "yes": "Ano",
     "no": "Ne",
@@ -650,6 +652,7 @@
     "currency": "Měna",
     "contact": "Kontakt",
     "category": "Kategorie",
+    "uncategorized": "Uncategorized",
     "from_date": "Od data",
     "to_date": "Do data",
     "expense_date": "Datum",
@@ -925,8 +928,8 @@
     "company_info": {
       "company_info": "Údaje o společnosti",
       "company_name": "Název společnosti",
-      "tax_id": "Daňové identifikační číslo",
-      "vat_id": "Daňové identifikační číslo",
+      "tax_id": "Identifikační číslo osoby (IČO)",
+      "vat_id": "Daňové identifikační číslo (DIČ)",
       "company_logo": "Logo společnosti",
       "section_description": "Informace o vaší společnosti, která bude zobrazena na fakturách, odhadech a dalších dokladech vytvořených v InvoiceShelfu.",
       "phone": "Telefon",
@@ -1324,7 +1327,8 @@
       "finishing_update": "Dokončování aktualizace",
       "update_failed": "Aktualizace se nezdařila",
       "update_failed_text": "Omlouváme se! Aktualizace se nezdařila v {step}. kroku",
-      "update_warning": "Všechny soubory aplikace a výchozí soubory šablon budou přepsány při aktualizaci aplikace pomocí tohoto nástroje. Před aktualizací si prosím zálohujte šablony a databázi."
+      "update_warning": "Všechny soubory aplikace a výchozí soubory šablon budou přepsány při aktualizaci aplikace pomocí tohoto nástroje. Před aktualizací si prosím zálohujte šablony a databázi.",
+      "requirements_not_met": "Update cannot continue because some system requirements are not met (including minimum PHP version). Please fix the failed requirements and try again."
     },
     "backup": {
       "title": "Záloha | Zálohy",
@@ -1646,6 +1650,7 @@
   "pdf_total_tax_label": "DANĚ CELKEM",
   "pdf_tax_types_label": "Typy daní",
   "pdf_expenses_label": "Výdaje",
+  "pdf_expense_group_total_label": "Group total:",
   "pdf_bill_to": "Odběratel",
   "pdf_ship_to": "Příjemce",
   "pdf_received_from": "Přijato od:",

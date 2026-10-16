@@ -29,6 +29,8 @@
     "to_date": "To Date",
     "from": "From",
     "to": "To",
+    "cc": "CC",
+    "bcc": "BCC",
     "ok": "Ok",
     "yes": "Yes",
     "no": "No",
@@ -650,6 +652,7 @@
     "currency": "Currency",
     "contact": "Contact",
     "category": "Category",
+    "uncategorized": "Uncategorized",
     "from_date": "From Date",
     "to_date": "To Date",
     "expense_date": "Date",
@@ -1324,7 +1327,8 @@
       "finishing_update": "Finishing Update",
       "update_failed": "Update Failed",
       "update_failed_text": "Sorry! Your update failed on : {step} step",
-      "update_warning": "All of the application files and default template files will be overwritten when you update the application using this utility. Please take a backup of your templates & database before updating."
+      "update_warning": "All of the application files and default template files will be overwritten when you update the application using this utility. Please take a backup of your templates & database before updating.",
+      "requirements_not_met": "Update cannot continue because some system requirements are not met (including minimum PHP version). Please fix the failed requirements and try again."
     },
     "backup": {
       "title": "Backup | Backups",
@@ -1646,6 +1650,7 @@
   "pdf_total_tax_label": "TOTAL TAX",
   "pdf_tax_types_label": "Tax Types",
   "pdf_expenses_label": "Expenses",
+  "pdf_expense_group_total_label": "Group total:",
   "pdf_bill_to": "Bill to,",
   "pdf_ship_to": "Ship to,",
   "pdf_received_from": "Received from:",

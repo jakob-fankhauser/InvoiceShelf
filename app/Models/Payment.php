@@ -5,6 +5,9 @@ namespace App\Models;
 use App\Jobs\GeneratePaymentPdfJob;
 use App\Mail\SendPaymentMail;
 use App\Services\SerialNumberFormatter;
+use App\Support\MoneyConversion;
+use App\Support\PublicToken;
+use App\Support\SafeOrderBy;
 use App\Traits\GeneratesPdfTrait;
 use App\Traits\HasCustomFieldsTrait;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
@@ -15,7 +18,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
-use Vinkla\Hashids\Facades\Hashids;
 
 class Payment extends Model implements HasMedia
 {
@@ -116,7 +118,7 @@ class Payment extends Model implements HasMedia
 
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'creator_id');
+        return $this->belongsTo(User::class, 'creator_id');
     }
 
     public function currency(): BelongsTo
@@ -144,7 +146,14 @@ class Payment extends Model implements HasMedia
     {
         $data = $this->sendPaymentData($data);
 
-        \Mail::to($data['to'])->send(new SendPaymentMail($data));
+        $mail = \Mail::to($data['to']);
+        if (! empty($data['cc'])) {
+            $mail->cc($data['cc']);
+        }
+        if (! empty($data['bcc'])) {
+            $mail->bcc($data['bcc']);
+        }
+        $mail->send(new SendPaymentMail($data));
 
         return [
             'success' => true,
@@ -161,7 +170,7 @@ class Payment extends Model implements HasMedia
         }
 
         $payment = Payment::create($data);
-        $payment->unique_hash = Hashids::connection(Payment::class)->encode($payment->id);
+        $payment->unique_hash = PublicToken::make();
 
         $serial = (new SerialNumberFormatter)
             ->setModel($payment)
@@ -349,7 +358,7 @@ class Payment extends Model implements HasMedia
 
     public function scopeWhereOrder($query, $orderByField, $orderBy)
     {
-        $query->orderBy($orderByField, $orderBy);
+        return SafeOrderBy::apply($query, $orderByField, $orderBy);
     }
 
     public function scopeWherePayment($query, $payment_id)
@@ -465,13 +474,13 @@ class Payment extends Model implements HasMedia
         $data['payment_method_id'] = request()->payment_method_id;
         $data['customer_id'] = $invoice->customer_id;
         $data['exchange_rate'] = $invoice->exchange_rate;
-        $data['base_amount'] = $data['amount'] * $data['exchange_rate'];
+        $data['base_amount'] = MoneyConversion::toBaseMinor($data['amount'], $data['exchange_rate']);
         $data['currency_id'] = $invoice->currency_id;
         $data['company_id'] = $invoice->company_id;
         $data['transaction_id'] = $transaction->id;
 
         $payment = Payment::create($data);
-        $payment->unique_hash = Hashids::connection(Payment::class)->encode($payment->id);
+        $payment->unique_hash = PublicToken::make();
         $payment->sequence_number = $serial->nextSequenceNumber;
         $payment->customer_sequence_number = $serial->nextCustomerSequenceNumber;
         $payment->save();

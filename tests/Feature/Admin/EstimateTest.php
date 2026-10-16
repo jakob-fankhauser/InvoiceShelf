@@ -6,6 +6,7 @@ use App\Http\Requests\DeleteEstimatesRequest;
 use App\Http\Requests\EstimatesRequest;
 use App\Http\Requests\SendEstimatesRequest;
 use App\Mail\SendEstimateMail;
+use App\Models\Company;
 use App\Models\Estimate;
 use App\Models\EstimateItem;
 use App\Models\Tax;
@@ -56,12 +57,9 @@ test('create estimate', function () {
         'estimate_number' => $estimate['estimate_number'],
         'discount_type' => $estimate['discount_type'],
         'discount_val' => $estimate['discount_val'],
-        'sub_total' => $estimate['sub_total'],
         'discount' => $estimate['discount'],
         'customer_id' => $estimate['customer_id'],
-        'total' => $estimate['total'],
         'notes' => $estimate['notes'],
-        'tax' => $estimate['tax'],
     ]);
 });
 
@@ -114,12 +112,9 @@ test('update estimate', function () {
         'estimate_number' => $estimate2['estimate_number'],
         'discount_type' => $estimate2['discount_type'],
         'discount_val' => $estimate2['discount_val'],
-        'sub_total' => $estimate2['sub_total'],
         'discount' => $estimate2['discount'],
         'customer_id' => $estimate2['customer_id'],
-        'total' => $estimate2['total'],
         'notes' => $estimate2['notes'],
-        'tax' => $estimate2['tax'],
     ]);
 
     $this->assertDatabaseHas('estimate_items', [
@@ -247,6 +242,16 @@ test('create invoice from estimate', function () {
     $response->assertStatus(200);
 });
 
+test('cannot convert an estimate belonging to another company', function () {
+    $estimate = Estimate::factory()->create([
+        'company_id' => Company::factory()->create()->id,
+        'estimate_date' => now(),
+        'expiry_date' => now()->addMonth(),
+    ]);
+
+    postJson("api/v1/estimates/{$estimate->id}/convert-to-invoice")->assertStatus(403);
+});
+
 test('delete multiple estimates using a form request', function () {
     $this->assertActionUsesFormRequest(
         EstimatesController::class,
@@ -308,12 +313,9 @@ test('create estimate with tax per item', function () {
         'estimate_number' => $estimate['estimate_number'],
         'discount_type' => $estimate['discount_type'],
         'discount_val' => $estimate['discount_val'],
-        'sub_total' => $estimate['sub_total'],
         'discount' => $estimate['discount'],
         'customer_id' => $estimate['customer_id'],
-        'total' => $estimate['total'],
         'notes' => $estimate['notes'],
-        'tax' => $estimate['tax'],
     ]);
 
     $this->assertDatabaseHas('estimate_items', [
@@ -334,15 +336,15 @@ test('create estimate with EUR currency', function () {
             'total' => 189,
             'tax' => 9,
             'exchange_rate' => 86.403538,
-            'base_discount_val' => 1728.07,
-            'base_sub_total' => 17280.71,
-            'base_total' => 16330.27,
-            'base_tax' => 777.63,
+            'base_discount_val' => 1728,
+            'base_sub_total' => 17281,
+            'base_total' => 16330,
+            'base_tax' => 778,
             'taxes' => [Tax::factory()->raw([
                 'amount' => 9,
                 'percent' => 5,
                 'exchange_rate' => 86.403538,
-                'base_amount' => 777.63,
+                'base_amount' => 778,
             ])],
             'items' => [EstimateItem::factory()->raw([
                 'discount_type' => 'fixed',
@@ -354,9 +356,9 @@ test('create estimate with EUR currency', function () {
                 'total' => 200,
                 'exchange_rate' => 86.403538,
                 'base_discount_val' => 0,
-                'base_price' => 17280.71,
-                'base_tax' => 777.63,
-                'base_total' => 17280.71,
+                'base_price' => 17281,
+                'base_tax' => 0,
+                'base_total' => 17281,
             ])],
         ]);
 
@@ -367,12 +369,9 @@ test('create estimate with EUR currency', function () {
         'estimate_number' => $estimate['estimate_number'],
         'discount_type' => $estimate['discount_type'],
         'discount_val' => $estimate['discount_val'],
-        'sub_total' => $estimate['sub_total'],
         'discount' => $estimate['discount'],
         'customer_id' => $estimate['customer_id'],
-        'total' => $estimate['total'],
         'notes' => $estimate['notes'],
-        'tax' => $estimate['tax'],
     ]);
 
     $this->assertDatabaseHas('taxes', [
@@ -404,16 +403,16 @@ test('update estimate with EUR currency', function () {
             'total' => 189,
             'tax' => 9,
             'exchange_rate' => 86.403538,
-            'base_discount_val' => 1728.07076,
-            'base_sub_total' => 17280.7076,
-            'base_total' => 16330.268682,
-            'base_tax' => 777.631842,
+            'base_discount_val' => 1728,
+            'base_sub_total' => 17281,
+            'base_total' => 16330,
+            'base_tax' => 778,
             'taxes' => [Tax::factory()->raw([
                 'tax_type_id' => $estimate->taxes[0]->tax_type_id,
                 'amount' => 9,
                 'percent' => 5,
                 'exchange_rate' => 86.403538,
-                'base_amount' => 777.631842,
+                'base_amount' => 778,
             ])],
             'items' => [EstimateItem::factory()->raw([
                 'estimate_id' => $estimate->id,
@@ -426,9 +425,9 @@ test('update estimate with EUR currency', function () {
                 'total' => 200,
                 'exchange_rate' => 86.403538,
                 'base_discount_val' => 0,
-                'base_price' => 17280.7076,
-                'base_tax' => 777.631842,
-                'base_total' => 17280.7076,
+                'base_price' => 17281,
+                'base_tax' => 0,
+                'base_total' => 17281,
             ])],
         ]);
 

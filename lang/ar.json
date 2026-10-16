@@ -29,6 +29,8 @@
     "to_date": "إلى تاريخ",
     "from": "من",
     "to": "إلى",
+    "cc": "CC",
+    "bcc": "BCC",
     "ok": "تم",
     "yes": "نعم",
     "no": "لا",
@@ -93,7 +95,7 @@
     "no_note_found": "لم يتم العثور على الملاحظة",
     "insert_note": "أدخل ملاحظة",
     "copied_pdf_url_clipboard": "تم نسخ رابط PDF إلى الحافظة!",
-    "copied_url_clipboard": "Copied url to clipboard!",
+    "copied_url_clipboard": "تم نسخ الرابط إلى الحافظة!",
     "docs": "Docs",
     "do_you_wish_to_continue": "هل ترغب في الاستمرار؟",
     "note": "ملاحظة",
@@ -650,6 +652,7 @@
     "currency": "Currency",
     "contact": "تواصل",
     "category": "الفئة",
+    "uncategorized": "Uncategorized",
     "from_date": "من تاريخ",
     "to_date": "حتى تاريخ",
     "expense_date": "التاريخ",
@@ -1324,7 +1327,8 @@
       "finishing_update": "تحديث التشطيب",
       "update_failed": "فشل التحديث",
       "update_failed_text": "آسف! فشل التحديث الخاص بك في: {step} خطوة",
-      "update_warning": "All of the application files and default template files will be overwritten when you update the application using this utility. Please take a backup of your templates & database before updating."
+      "update_warning": "All of the application files and default template files will be overwritten when you update the application using this utility. Please take a backup of your templates & database before updating.",
+      "requirements_not_met": "Update cannot continue because some system requirements are not met (including minimum PHP version). Please fix the failed requirements and try again."
     },
     "backup": {
       "title": "النسخ الاحتياطي | النسخ الاحتياطية",
@@ -1646,6 +1650,7 @@
   "pdf_total_tax_label": "اجمالي الاداءات",
   "pdf_tax_types_label": "أنواع الضرائب",
   "pdf_expenses_label": "النفقات",
+  "pdf_expense_group_total_label": "Group total:",
   "pdf_bill_to": "مطلوب من,",
   "pdf_ship_to": "يشحن إلى,",
   "pdf_received_from": "تم الاستلام من:",

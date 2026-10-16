@@ -29,6 +29,8 @@
     "to_date": "Έως ημερομηνία",
     "from": "Aπό",
     "to": "Προς",
+    "cc": "CC",
+    "bcc": "BCC",
     "ok": "Οκ",
     "yes": "Ναι",
     "no": "Όχι",
@@ -650,6 +652,7 @@
     "currency": "Νόμισμα",
     "contact": "Επικοινωνία",
     "category": "Κατηγορία",
+    "uncategorized": "Uncategorized",
     "from_date": "Από Ημερομηνία",
     "to_date": "Έως ημερομηνία",
     "expense_date": "Ημερομηνία",
@@ -1324,7 +1327,8 @@
       "finishing_update": "Ολοκλήρωση Ενημέρωσης",
       "update_failed": "Αποτυχία ενημέρωσης",
       "update_failed_text": "Συγνώμη! Η ενημέρωσή σας απέτυχε σε: {step} βήμα",
-      "update_warning": "Όλα τα αρχεία εφαρμογών και τα προεπιλεγμένα αρχεία προτύπων θα αντικατασταθούν όταν ενημερώνετε την εφαρμογή χρησιμοποιώντας αυτό το βοηθητικό πρόγραμμα. Παρακαλώ πάρτε ένα αντίγραφο ασφαλείας των προτύπων και της βάσης δεδομένων σας πριν από την ενημέρωση."
+      "update_warning": "Όλα τα αρχεία εφαρμογών και τα προεπιλεγμένα αρχεία προτύπων θα αντικατασταθούν όταν ενημερώνετε την εφαρμογή χρησιμοποιώντας αυτό το βοηθητικό πρόγραμμα. Παρακαλώ πάρτε ένα αντίγραφο ασφαλείας των προτύπων και της βάσης δεδομένων σας πριν από την ενημέρωση.",
+      "requirements_not_met": "Update cannot continue because some system requirements are not met (including minimum PHP version). Please fix the failed requirements and try again."
     },
     "backup": {
       "title": "Αντίγραφο Ασφαλείας \"Αντίγραφα Ασφαλείας",
@@ -1646,6 +1650,7 @@
   "pdf_total_tax_label": "ΣΥΝΟΛΟ ΦΟΡΟΥ",
   "pdf_tax_types_label": "Φορολογική κλάση",
   "pdf_expenses_label": "Έξοδα",
+  "pdf_expense_group_total_label": "Group total:",
   "pdf_bill_to": "Χρέωση σε,",
   "pdf_ship_to": "Αποστολή σε,",
   "pdf_received_from": "Λήψη από",

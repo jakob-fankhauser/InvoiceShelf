@@ -8,20 +8,26 @@ use App\Models\CompanySetting;
 use App\Models\Estimate;
 use App\Models\Invoice;
 use App\Services\SerialNumberFormatter;
+use App\Support\MoneyConversion;
+use App\Support\PublicToken;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
-use Vinkla\Hashids\Facades\Hashids;
 
 class ConvertEstimateController extends Controller
 {
     /**
      * Handle the incoming request.
      *
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function __invoke(Request $request, Estimate $estimate, Invoice $invoice)
     {
+        // Authorize access to the source estimate (tenant isolation) in addition
+        // to the ability to create an invoice — otherwise any estimate id from
+        // another company could be converted and disclosed.
+        $this->authorize('view', $estimate);
         $this->authorize('create', Invoice::class);
 
         $estimate->load(['items', 'items.taxes', 'customer', 'taxes']);
@@ -76,33 +82,36 @@ class ConvertEstimateController extends Controller
             'tax' => $estimate->tax,
             'notes' => $estimate->notes,
             'exchange_rate' => $exchange_rate,
-            'base_discount_val' => $estimate->discount_val * $exchange_rate,
-            'base_sub_total' => $estimate->sub_total * $exchange_rate,
-            'base_total' => $estimate->total * $exchange_rate,
-            'base_tax' => $estimate->tax * $exchange_rate,
+            'base_discount_val' => MoneyConversion::toBaseMinor($estimate->discount_val, $exchange_rate),
+            'base_sub_total' => MoneyConversion::toBaseMinor($estimate->sub_total, $exchange_rate),
+            'base_total' => MoneyConversion::toBaseMinor($estimate->total, $exchange_rate),
+            'base_due_amount' => MoneyConversion::toBaseMinor($estimate->total, $exchange_rate),
+            'base_tax' => MoneyConversion::toBaseMinor($estimate->tax, $exchange_rate),
             'currency_id' => $estimate->currency_id,
             'sales_tax_type' => $estimate->sales_tax_type,
             'sales_tax_address_type' => $estimate->sales_tax_address_type,
         ]);
 
-        $invoice->unique_hash = Hashids::connection(Invoice::class)->encode($invoice->id);
+        $invoice->unique_hash = PublicToken::make();
         $invoice->save();
         $invoiceItems = $estimate->items->toArray();
 
         foreach ($invoiceItems as $invoiceItem) {
             $invoiceItem['company_id'] = $request->header('company');
             $invoiceItem['name'] = $invoiceItem['name'];
-            $estimateItem['exchange_rate'] = $exchange_rate;
-            $estimateItem['base_price'] = $invoiceItem['price'] * $exchange_rate;
-            $estimateItem['base_discount_val'] = $invoiceItem['discount_val'] * $exchange_rate;
-            $estimateItem['base_tax'] = $invoiceItem['tax'] * $exchange_rate;
-            $estimateItem['base_total'] = $invoiceItem['total'] * $exchange_rate;
+            $invoiceItem['exchange_rate'] = $exchange_rate;
+            $invoiceItem['base_price'] = MoneyConversion::toBaseMinor($invoiceItem['price'], $exchange_rate);
+            $invoiceItem['base_discount_val'] = MoneyConversion::toBaseMinor($invoiceItem['discount_val'], $exchange_rate);
+            $invoiceItem['base_tax'] = MoneyConversion::toBaseMinor($invoiceItem['tax'], $exchange_rate);
+            $invoiceItem['base_total'] = MoneyConversion::toBaseMinor($invoiceItem['total'], $exchange_rate);
 
             $item = $invoice->items()->create($invoiceItem);
 
             if (array_key_exists('taxes', $invoiceItem) && $invoiceItem['taxes']) {
                 foreach ($invoiceItem['taxes'] as $tax) {
                     $tax['company_id'] = $request->header('company');
+                    $tax['exchange_rate'] = $exchange_rate;
+                    $tax['base_amount'] = MoneyConversion::toBaseMinor($tax['amount'], $exchange_rate);
 
                     if ($tax['amount']) {
                         $item->taxes()->create($tax);
@@ -115,7 +124,7 @@ class ConvertEstimateController extends Controller
             foreach ($estimate->taxes->toArray() as $tax) {
                 $tax['company_id'] = $request->header('company');
                 $tax['exchange_rate'] = $exchange_rate;
-                $tax['base_amount'] = $tax['amount'] * $exchange_rate;
+                $tax['base_amount'] = MoneyConversion::toBaseMinor($tax['amount'], $exchange_rate);
                 $tax['currency_id'] = $estimate->currency_id;
                 unset($tax['estimate_id']);
 

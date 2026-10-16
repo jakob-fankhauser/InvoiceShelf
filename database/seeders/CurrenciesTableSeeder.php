@@ -638,6 +638,23 @@ class CurrenciesTableSeeder extends Seeder
                 'thousand_separator' => '.',
                 'decimal_separator' => ',',
             ],
+            [
+                'name' => 'Qatari Riyal',
+                'code' => 'QAR',
+                'symbol' => 'QR',
+                'precision' => '2',
+                'thousand_separator' => ',',
+                'decimal_separator' => '.',
+            ],
+            [
+                'name' => 'Georgian Lari',
+                'code' => 'GEL',
+                'symbol' => '₾',
+                'precision' => 2,
+                'thousand_separator' => ',',
+                'decimal_separator' => '.',
+                'swap_currency_symbol' => true,
+            ],
         ];
 
         foreach ($currencies as $currency) {

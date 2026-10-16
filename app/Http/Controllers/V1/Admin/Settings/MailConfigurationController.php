@@ -10,6 +10,7 @@ use App\Space\EnvironmentManager;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Mail;
 
 class MailConfigurationController extends Controller
@@ -105,12 +106,6 @@ class MailConfigurationController extends Controller
                     'mail_ses_region' => $request->get('mail_ses_region', 'us-east-1'),
                 ]);
                 break;
-
-            case 'sendmail':
-                $settings = array_merge($settings, [
-                    'mail_sendmail_path' => $request->get('mail_sendmail_path', '/usr/sbin/sendmail -bs -i'),
-                ]);
-                break;
         }
 
         return $settings;
@@ -148,7 +143,6 @@ class MailConfigurationController extends Controller
             'mail_ses_key',
             'mail_ses_secret',
             'mail_ses_region',
-            'mail_sendmail_path',
         ]);
 
         $driver = $mailSettings['mail_driver'] ?? config('mail.default');
@@ -164,11 +158,11 @@ class MailConfigurationController extends Controller
         switch ($driver) {
             case 'smtp':
                 $MailData = array_merge($MailData, [
-                    'mail_host' => $mailSettings['mail_host'] ?? '',
-                    'mail_port' => $mailSettings['mail_port'] ?? '',
-                    'mail_username' => $mailSettings['mail_username'] ?? '',
-                    'mail_password' => $mailSettings['mail_password'] ?? '',
-                    'mail_encryption' => $mailSettings['mail_encryption'] ?? 'none',
+                    'mail_host' => $mailSettings['mail_host'] ?? config('mail.mailers.smtp.host', ''),
+                    'mail_port' => $mailSettings['mail_port'] ?? config('mail.mailers.smtp.port', ''),
+                    'mail_username' => $mailSettings['mail_username'] ?? config('mail.mailers.smtp.username', ''),
+                    'mail_password' => $mailSettings['mail_password'] ?? config('mail.mailers.smtp.password', ''),
+                    'mail_encryption' => $mailSettings['mail_encryption'] ?? config('mail.mailers.smtp.encryption', 'none'),
                     'mail_scheme' => $mailSettings['mail_scheme'] ?? '',
                     'mail_url' => $mailSettings['mail_url'] ?? '',
                     'mail_timeout' => $mailSettings['mail_timeout'] ?? '',
@@ -190,12 +184,6 @@ class MailConfigurationController extends Controller
                     'mail_ses_key' => $mailSettings['mail_ses_key'] ?? '',
                     'mail_ses_secret' => $mailSettings['mail_ses_secret'] ?? '',
                     'mail_ses_region' => $mailSettings['mail_ses_region'] ?? 'us-east-1',
-                ]);
-                break;
-
-            case 'sendmail':
-                $MailData = array_merge($MailData, [
-                    'mail_sendmail_path' => $mailSettings['mail_sendmail_path'] ?? '/usr/sbin/sendmail -bs -i',
                 ]);
                 break;
 
@@ -235,7 +223,7 @@ class MailConfigurationController extends Controller
      * @return JsonResponse
      *
      * @throws AuthorizationException
-     * @throws \Illuminate\Validation\ValidationException
+     * @throws ValidationException
      */
     public function testEmailConfig(Request $request)
     {

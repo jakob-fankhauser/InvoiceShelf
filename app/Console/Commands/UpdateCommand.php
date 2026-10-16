@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Space\Updater;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\File;
 
 // Implementation taken from Akaunting - https://github.com/akaunting/akaunting
 class UpdateCommand extends Command
@@ -45,6 +46,12 @@ class UpdateCommand extends Command
     {
         set_time_limit(3600); // 1 hour
 
+        if (config('invoiceshelf.containerized')) {
+            $this->error('The in-app updater is disabled in containerized installs. Upgrade with `docker compose pull`.');
+
+            return;
+        }
+
         $this->installed = $this->getInstalledVersion();
         $this->response = $this->getLatestVersionResponse();
         $this->version = ($this->response) ? $this->response->version : false;
@@ -78,10 +85,8 @@ class UpdateCommand extends Command
             return;
         }
 
-        if (isset($this->response->deleted_files) && ! empty($this->response->deleted_files)) {
-            if (! $this->deleteFiles($this->response->deleted_files)) {
-                return;
-            }
+        if (! $this->cleanFiles()) {
+            return;
         }
 
         if (! $this->migrateUpdate()) {
@@ -193,12 +198,19 @@ class UpdateCommand extends Command
         return true;
     }
 
-    public function deleteFiles($files)
+    public function cleanFiles()
     {
-        $this->info('Deleting unused old files...');
-
         try {
-            Updater::deleteFiles($files);
+            // When the release ships a manifest.json (e.g. v3), remove every stale file
+            // not listed in it. Otherwise fall back to the explicit deleted_files list
+            // for same-line updates.
+            if (File::exists(base_path('manifest.json'))) {
+                $this->info('Cleaning stale files...');
+                Updater::cleanStaleFiles();
+            } elseif (isset($this->response->deleted_files) && ! empty($this->response->deleted_files)) {
+                $this->info('Deleting unused old files...');
+                Updater::deleteFiles($this->response->deleted_files);
+            }
         } catch (\Exception $e) {
             $this->error($e->getMessage());
 

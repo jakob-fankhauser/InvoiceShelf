@@ -4,10 +4,12 @@ namespace App\Http\Controllers\V1\Admin\Settings;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\DiskEnvironmentRequest;
+use App\Http\Requests\UpdateDiskRequest;
 use App\Http\Resources\FileDiskResource;
 use App\Models\FileDisk;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class DiskController extends Controller
 {
@@ -43,10 +45,10 @@ class DiskController extends Controller
     }
 
     /**
-     * @param  \App\Models\FileDisk  $file_disk
+     * @param  FileDisk  $file_disk
      * @return JsonResponse
      */
-    public function update(FileDisk $disk, Request $request)
+    public function update(FileDisk $disk, UpdateDiskRequest $request)
     {
         $this->authorize('manage file disk');
 
@@ -136,8 +138,8 @@ class DiskController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\FileDisk  $taxType
-     * @return \Illuminate\Http\Response
+     * @param  FileDisk  $taxType
+     * @return Response
      */
     public function destroy(FileDisk $disk)
     {

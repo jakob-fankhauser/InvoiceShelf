@@ -24,6 +24,7 @@ use App\Http\Controllers\V1\Admin\ExchangeRate\GetActiveProviderController;
 use App\Http\Controllers\V1\Admin\ExchangeRate\GetExchangeRateController;
 use App\Http\Controllers\V1\Admin\ExchangeRate\GetSupportedCurrenciesController;
 use App\Http\Controllers\V1\Admin\ExchangeRate\GetUsedCurrenciesController;
+use App\Http\Controllers\V1\Admin\Expense\DuplicateExpenseController;
 use App\Http\Controllers\V1\Admin\Expense\ExpenseCategoriesController;
 use App\Http\Controllers\V1\Admin\Expense\ExpensesController;
 use App\Http\Controllers\V1\Admin\Expense\ShowReceiptController;
@@ -313,6 +314,8 @@ Route::prefix('/v1')->group(function () {
 
             Route::post('/expenses/delete', [ExpensesController::class, 'delete']);
 
+            Route::post('/expenses/{expense}/duplicate', DuplicateExpenseController::class);
+
             Route::apiResource('expenses', ExpensesController::class);
 
             Route::apiResource('categories', ExpenseCategoriesController::class);
@@ -338,11 +341,15 @@ Route::prefix('/v1')->group(function () {
             // Backup & Disk
             // ----------------------------------
 
-            Route::apiResource('backups', BackupsController::class);
+            // The backup endpoints read the disk a file_disk_id names from the
+            // runtime default, so only they get the switching middleware.
+            Route::middleware('file-disk')->group(function () {
+                Route::apiResource('backups', BackupsController::class);
+
+                Route::get('download-backup', DownloadBackupController::class);
+            });
 
             Route::apiResource('/disks', DiskController::class);
-
-            Route::get('download-backup', DownloadBackupController::class);
 
             Route::get('/disk/drivers', [DiskController::class, 'getDiskDrivers']);
 
@@ -429,20 +436,24 @@ Route::prefix('/v1')->group(function () {
 
         // Self Update
         // ----------------------------------
+        // Disabled inside the official Docker image — containers upgrade via
+        // `docker compose pull`, not the in-app updater (see EnsureNotContainerized).
 
-        Route::get('/check/update', CheckVersionController::class);
+        Route::middleware('not-containerized')->group(function () {
+            Route::get('/check/update', CheckVersionController::class);
 
-        Route::post('/update/download', DownloadUpdateController::class);
+            Route::post('/update/download', DownloadUpdateController::class);
 
-        Route::post('/update/unzip', UnzipUpdateController::class);
+            Route::post('/update/unzip', UnzipUpdateController::class);
 
-        Route::post('/update/copy', CopyFilesController::class);
+            Route::post('/update/copy', CopyFilesController::class);
 
-        Route::post('/update/delete', DeleteFilesController::class);
+            Route::post('/update/delete', DeleteFilesController::class);
 
-        Route::post('/update/migrate', MigrateUpdateController::class);
+            Route::post('/update/migrate', MigrateUpdateController::class);
 
-        Route::post('/update/finish', FinishUpdateController::class);
+            Route::post('/update/finish', FinishUpdateController::class);
+        });
 
         // Companies
         // -------------------------------------------------

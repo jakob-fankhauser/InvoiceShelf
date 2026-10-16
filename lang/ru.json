@@ -29,6 +29,8 @@
     "to_date": "До даты",
     "from": "Отправитель",
     "to": "Получатель",
+    "cc": "CC",
+    "bcc": "BCC",
     "ok": "Ок",
     "yes": "Да",
     "no": "Нет",
@@ -650,6 +652,7 @@
     "currency": "Валюта",
     "contact": "Контакт",
     "category": "Категория",
+    "uncategorized": "Uncategorized",
     "from_date": "От даты",
     "to_date": "До даты",
     "expense_date": "Дата",
@@ -1324,7 +1327,8 @@
       "finishing_update": "Заканчиваем обновление",
       "update_failed": "Не удалось обновить",
       "update_failed_text": "Извиняюсь! Ваше обновление не выполнено на шаге {step}",
-      "update_warning": "Все файлы приложения и файлы шаблонов по умолчанию будут перезаписаны при обновлении приложения с помощью этой утилиты. Перед обновлением сделайте резервную копию ваших шаблонов и базы данных."
+      "update_warning": "Все файлы приложения и файлы шаблонов по умолчанию будут перезаписаны при обновлении приложения с помощью этой утилиты. Перед обновлением сделайте резервную копию ваших шаблонов и базы данных.",
+      "requirements_not_met": "Update cannot continue because some system requirements are not met (including minimum PHP version). Please fix the failed requirements and try again."
     },
     "backup": {
       "title": "Резервное копирование | Резервные копии",
@@ -1646,6 +1650,7 @@
   "pdf_total_tax_label": "ВСЕГО НАЛОГОВ",
   "pdf_tax_types_label": "Типы налогов",
   "pdf_expenses_label": "Расходы",
+  "pdf_expense_group_total_label": "Group total:",
   "pdf_bill_to": "Адрес счёта,",
   "pdf_ship_to": "Адрес доставки,",
   "pdf_received_from": "Получено от:",

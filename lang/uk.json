@@ -29,6 +29,8 @@
     "to_date": "До дати",
     "from": "З",
     "to": "До",
+    "cc": "CC",
+    "bcc": "BCC",
     "ok": "Ок",
     "yes": "Так",
     "no": "Ні",
@@ -650,6 +652,7 @@
     "currency": "Валюта",
     "contact": "Контакт",
     "category": "Категорія",
+    "uncategorized": "Uncategorized",
     "from_date": "Від дати",
     "to_date": "До дати",
     "expense_date": "Дата",
@@ -1324,7 +1327,8 @@
       "finishing_update": "Оновлення завершення",
       "update_failed": "Спроба оновлення зазнала невдачі",
       "update_failed_text": "Вибачте! Оновлення не вдалось на кроці: {step} ",
-      "update_warning": "Всі файли програми та файли шаблонів за замовчуванням будуть перезаписані, коли ви оновите програму за допомогою цієї утиліти. Будь ласка, зробіть резервну копію ваших шаблонів і бази даних перед оновленням."
+      "update_warning": "Всі файли програми та файли шаблонів за замовчуванням будуть перезаписані, коли ви оновите програму за допомогою цієї утиліти. Будь ласка, зробіть резервну копію ваших шаблонів і бази даних перед оновленням.",
+      "requirements_not_met": "Update cannot continue because some system requirements are not met (including minimum PHP version). Please fix the failed requirements and try again."
     },
     "backup": {
       "title": "Резервне копіювання | Резервні копії",
@@ -1646,6 +1650,7 @@
   "pdf_total_tax_label": "Загальний звіт податків",
   "pdf_tax_types_label": "Типи податків",
   "pdf_expenses_label": "Витрати",
+  "pdf_expense_group_total_label": "Group total:",
   "pdf_bill_to": "Рахунок до,",
   "pdf_ship_to": "Доставити до,",
   "pdf_received_from": "Отримано від:",

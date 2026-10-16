@@ -16,7 +16,7 @@ return [
     /*
     * Minimum php version.
     */
-    'min_php_version' => '8.2.0',
+    'min_php_version' => '8.4.0',
 
     /*
     * Minimum mysql version.
@@ -46,6 +46,32 @@ return [
     * Marketplace url.
     */
     'base_url' => 'https://invoiceshelf.com',
+
+    /*
+    * Whether the app runs inside the official Docker image. The image's
+    * docker/production/inject.sh sets CONTAINERIZED=true in .env at startup.
+    * When true, the in-app updater is disabled (the API refuses and the UI hides
+    * it) because containers upgrade via `docker compose pull`, not by copying
+    * release files over the read-only/ephemeral image filesystem.
+    */
+    'containerized' => env('CONTAINERIZED', false),
+
+    /*
+    * Paths protected from cleanup during updates.
+    * The updater (Updater::cleanStaleFiles) will never delete files under these
+    * prefixes when reconciling the install against a release manifest.json.
+    */
+    'update_protected_paths' => [
+        '.env',
+        'storage',
+        'vendor',
+        'node_modules',
+        'Modules',
+        'public/storage',
+        '.git',
+        'bootstrap/cache',
+        'manifest.json',
+    ],
 
     /*
     * List of languages supported by InvoiceShelf.

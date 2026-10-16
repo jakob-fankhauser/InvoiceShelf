@@ -29,6 +29,8 @@
     "to_date": "終止日",
     "from": "從",
     "to": "至",
+    "cc": "CC",
+    "bcc": "BCC",
     "ok": "好",
     "yes": "確定",
     "no": "否",
@@ -650,6 +652,7 @@
     "currency": "主要貨幣",
     "contact": "聯絡",
     "category": "分類",
+    "uncategorized": "Uncategorized",
     "from_date": "啟始日",
     "to_date": "終止日",
     "expense_date": "日期",
@@ -1324,7 +1327,8 @@
       "finishing_update": "正完成更新",
       "update_failed": "更新失敗",
       "update_failed_text": "抱歉! 你的更新在這步驟中失敗: {step} step",
-      "update_warning": "All of the application files and default template files will be overwritten when you update the application using this utility. Please take a backup of your templates & database before updating."
+      "update_warning": "All of the application files and default template files will be overwritten when you update the application using this utility. Please take a backup of your templates & database before updating.",
+      "requirements_not_met": "Update cannot continue because some system requirements are not met (including minimum PHP version). Please fix the failed requirements and try again."
     },
     "backup": {
       "title": "備份 | 備份",
@@ -1646,6 +1650,7 @@
   "pdf_total_tax_label": "稅項總額",
   "pdf_tax_types_label": "稅收類型",
   "pdf_expenses_label": "支出",
+  "pdf_expense_group_total_label": "Group total:",
   "pdf_bill_to": "帳單地址,",
   "pdf_ship_to": "送貨地址,",
   "pdf_received_from": "接收自",

@@ -27,9 +27,35 @@
         </div>
       </div>
 
-      <div class="w-full pt-4">
-        <BaseCheckbox v-model="insiderChannel" :label="$t('settings.update_app.insider_consent')"/>
+      <!-- Containerized (Docker) install: the in-app updater is disabled. -->
+      <div v-if="isContainerized" class="mt-4 rounded-md bg-primary-50 p-4">
+        <div class="flex">
+          <div class="shrink-0">
+            <BaseIcon
+              name="InformationCircleIcon"
+              class="h-5 w-5 text-primary-400"
+              aria-hidden="true"
+            />
+          </div>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-primary-800">
+              {{ $t('settings.update_app.containerized_title') }}
+            </h3>
+            <div class="mt-2 text-sm text-primary-700">
+              <p>{{ $t('settings.update_app.containerized_message') }}</p>
+              <pre
+                class="mt-3 overflow-x-auto rounded-md bg-gray-200 p-3 text-xs text-gray-600"
+              >docker compose pull
+docker compose up --force-recreate --build -d</pre>
+            </div>
+          </div>
+        </div>
       </div>
+
+      <template v-else>
+        <div class="w-full pt-4">
+          <BaseCheckbox v-model="insiderChannel" :label="$t('settings.update_app.insider_consent')"/>
+        </div>
 
       <BaseButton
         :loading="isCheckingforUpdate"
@@ -147,7 +173,19 @@
           </tr>
         </table>
 
-        <BaseButton class="mt-10" variant="primary" @click="onUpdateApp">
+        <div
+          v-if="!allowToUpdate"
+          class="mt-6 rounded-md bg-red-50 p-4 text-sm text-red-700"
+        >
+          {{ $t('settings.update_app.requirements_not_met') }}
+        </div>
+
+        <BaseButton
+          class="mt-10"
+          variant="primary"
+          :disabled="!allowToUpdate"
+          @click="onUpdateApp"
+        >
           {{ $t('settings.update_app.update') }}
         </BaseButton>
       </div>
@@ -196,13 +234,14 @@
           </div>
         </li>
       </ul>
+      </template>
     </div>
   </BaseSettingCard>
 </template>
 
 <script setup>
 import { useNotificationStore } from '@/scripts/stores/notification'
-import axios from 'axios'
+import http from '@/scripts/http'
 import LoadingIcon from '@/scripts/components/icons/LoadingIcon.vue'
 import { reactive, ref, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -227,6 +266,7 @@ let insiderChannel = ref('')
 let requiredExtentions = ref(null)
 let deletedFiles = ref(null)
 let isUpdating = ref(false)
+let isContainerized = ref(false)
 
 const updateSteps = reactive([
   {
@@ -289,9 +329,10 @@ window.addEventListener('beforeunload', (event) => {
 
 // Created
 
-axios.get('/api/v1/app/version').then((res) => {
+http.get('/api/v1/app/version').then((res) => {
   currentVersion.value = res.data.version
   insiderChannel.value = res.data.channel === 'insider'
+  isContainerized.value = Boolean(res.data.containerized)
 })
 
 // comapnyStore
@@ -332,9 +373,9 @@ function statusClass(step) {
 async function checkUpdate() {
   try {
     isCheckingforUpdate.value = true
-    let response = await axios.get('/api/v1/check/update', {
+    let response = await http.get('/api/v1/check/update', {
       params: {
-        channel: insiderChannel ? 'insider' : ''
+        channel: insiderChannel.value ? 'insider' : ''
       }
     });
     isCheckingforUpdate.value = false
@@ -397,7 +438,7 @@ function onUpdateApp() {
               path: path || null,
             }
 
-            let requestResponse = await axios.post(
+            let requestResponse = await http.post(
               currentStep.stepUrl,
               updateParams
             )

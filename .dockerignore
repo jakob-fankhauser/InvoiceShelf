@@ -5,8 +5,12 @@
 docker/
 !docker/production/entrypoint.d
 !docker/production/inject.sh
+!docker/production/s6-overlay
 
 node_modules/
+
+# Vite output is rebuilt in the image's static_builder stage; never ship a stale host build
+public/build/
 
 database/*.sqlite
 storage/app/*

@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\User;
+
 return [
 
     /*
@@ -29,13 +31,22 @@ return [
     ],
 
     'stripe' => [
-        'model' => \App\Models\User::class,
+        'model' => User::class,
         'key' => env('STRIPE_KEY'),
         'secret' => env('STRIPE_SECRET'),
         'webhook' => [
             'secret' => env('STRIPE_WEBHOOK_SECRET'),
             'tolerance' => env('STRIPE_WEBHOOK_TOLERANCE', 300),
         ],
+    ],
+
+    /*
+     * Shared secret for the cron webhook at GET /api/cron, which lets an
+     * external scheduler drive Laravel's own on hosts that cannot register a
+     * crontab entry. Leave it unset and the endpoint refuses everything.
+     */
+    'cron_job' => [
+        'auth_token' => env('CRON_JOB_AUTH_TOKEN'),
     ],
 
     'ses' => [

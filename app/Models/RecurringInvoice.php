@@ -4,6 +4,10 @@ namespace App\Models;
 
 use App\Http\Requests\RecurringInvoiceRequest;
 use App\Services\SerialNumberFormatter;
+use App\Support\DocumentTotals;
+use App\Support\MoneyConversion;
+use App\Support\PublicToken;
+use App\Support\SafeOrderBy;
 use App\Traits\HasCustomFieldsTrait;
 use Carbon\Carbon;
 use Cron;
@@ -11,7 +15,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Vinkla\Hashids\Facades\Hashids;
 
 class RecurringInvoice extends Model
 {
@@ -132,7 +135,7 @@ class RecurringInvoice extends Model
 
     public function scopeWhereOrder($query, $orderByField, $orderBy)
     {
-        $query->orderBy($orderByField, $orderBy);
+        return SafeOrderBy::apply($query, $orderByField, $orderBy);
     }
 
     public function scopeWhereStatus($query, $status)
@@ -247,10 +250,19 @@ class RecurringInvoice extends Model
     {
         foreach ($invoiceItems as $invoiceItem) {
             $invoiceItem['company_id'] = $recurringInvoice->company_id;
+            // Recompute the item total from price/quantity (GHSA-8c69).
+            $invoiceItem['total'] = DocumentTotals::itemTotal($invoiceItem, $recurringInvoice->discount_per_item === 'YES');
+            $invoiceItem['exchange_rate'] = $recurringInvoice->exchange_rate;
+            foreach (['price', 'discount_val', 'tax', 'total'] as $field) {
+                $invoiceItem['base_'.$field] = MoneyConversion::toBaseMinor($invoiceItem[$field] ?? 0, $recurringInvoice->exchange_rate);
+            }
             $item = $recurringInvoice->items()->create($invoiceItem);
             if (array_key_exists('taxes', $invoiceItem) && $invoiceItem['taxes']) {
                 foreach ($invoiceItem['taxes'] as $tax) {
                     $tax['company_id'] = $recurringInvoice->company_id;
+                    $tax['exchange_rate'] = $recurringInvoice->exchange_rate;
+                    $tax['currency_id'] = $recurringInvoice->currency_id;
+                    $tax['base_amount'] = MoneyConversion::toBaseMinor($tax['amount'], $recurringInvoice->exchange_rate);
                     if (gettype($tax['amount']) !== 'NULL') {
                         $item->taxes()->create($tax);
                     }
@@ -263,6 +275,9 @@ class RecurringInvoice extends Model
     {
         foreach ($taxes as $tax) {
             $tax['company_id'] = $recurringInvoice->company_id;
+            $tax['exchange_rate'] = $recurringInvoice->exchange_rate;
+            $tax['currency_id'] = $recurringInvoice->currency_id;
+            $tax['base_amount'] = MoneyConversion::toBaseMinor($tax['amount'], $recurringInvoice->exchange_rate);
 
             if (gettype($tax['amount']) !== 'NULL') {
                 $recurringInvoice->taxes()->create($tax);
@@ -346,13 +361,13 @@ class RecurringInvoice extends Model
         $newInvoice['invoice_number'] = $serial->getNextNumber();
         $newInvoice['sequence_number'] = $serial->nextSequenceNumber;
         $newInvoice['customer_sequence_number'] = $serial->nextCustomerSequenceNumber;
-        $newInvoice['base_due_amount'] = $this->exchange_rate * $this->due_amount;
-        $newInvoice['base_discount_val'] = $this->exchange_rate * $this->discount_val;
-        $newInvoice['base_sub_total'] = $this->exchange_rate * $this->sub_total;
-        $newInvoice['base_tax'] = $this->exchange_rate * $this->tax;
-        $newInvoice['base_total'] = $this->exchange_rate * $this->total;
+        $newInvoice['base_due_amount'] = MoneyConversion::toBaseMinor($newInvoice['due_amount'], $this->exchange_rate);
+        $newInvoice['base_discount_val'] = MoneyConversion::toBaseMinor($this->discount_val, $this->exchange_rate);
+        $newInvoice['base_sub_total'] = MoneyConversion::toBaseMinor($this->sub_total, $this->exchange_rate);
+        $newInvoice['base_tax'] = MoneyConversion::toBaseMinor($this->tax, $this->exchange_rate);
+        $newInvoice['base_total'] = MoneyConversion::toBaseMinor($this->total, $this->exchange_rate);
         $invoice = Invoice::create($newInvoice);
-        $invoice->unique_hash = Hashids::connection(Invoice::class)->encode($invoice->id);
+        $invoice->unique_hash = PublicToken::make();
         $invoice->save();
 
         $this->load('items.taxes');
@@ -399,19 +414,66 @@ class RecurringInvoice extends Model
         }
     }
 
-    public static function getNextInvoiceDate($frequency, $starts_at)
+    /**
+     * The moment a cron expression next fires after the given date.
+     *
+     * The expression is evaluated in the caller's time zone, which is the
+     * owning company's where one is known, because that is the zone the
+     * scheduler itself uses. The answer comes back in the application's zone.
+     */
+    public static function getNextInvoiceDate($frequency, $from, $timezone = null)
     {
-        $cron = new Cron\CronExpression($frequency);
+        $appZone = config('app.timezone', 'UTC');
+        $zone = $timezone ?: $appZone;
 
-        return $cron->getNextRunDate($starts_at)->format('Y-m-d H:i:s');
+        $next = (new Cron\CronExpression($frequency))->getNextRunDate($from, 0, false, $zone);
+
+        return Carbon::instance($next)->setTimezone($appZone)->format('Y-m-d H:i:s');
     }
 
+    /**
+     * Move the due date on to the next occurrence.
+     *
+     * Counted from now, not from starts_at: counting from the start date
+     * pinned this column to the first occurrence forever, so the date the
+     * schedule screen shows stopped being true the moment the first invoice
+     * was generated. A schedule that has not started yet counts from its
+     * start date instead, so it cannot read as due early.
+     */
     public function updateNextInvoiceDate()
     {
-        $nextInvoiceAt = self::getNextInvoiceDate($this->frequency, $this->starts_at);
+        $this->next_invoice_at = self::getNextInvoiceDate(
+            $this->frequency,
+            $this->nextRunCountsFrom(),
+            $this->companyTimeZone()
+        );
 
-        $this->next_invoice_at = $nextInvoiceAt;
         $this->save();
+    }
+
+    /**
+     * The point the next occurrence is measured from: now, unless the
+     * schedule has a start date still in the future.
+     */
+    public function nextRunCountsFrom($from = null)
+    {
+        $moment = Carbon::parse($from ?: Carbon::now());
+
+        if ($this->starts_at && Carbon::parse($this->starts_at)->greaterThan($moment)) {
+            $moment = Carbon::parse($this->starts_at);
+        }
+
+        return $moment->format('Y-m-d H:i:s');
+    }
+
+    /**
+     * The time zone the owning company keeps its books in.
+     */
+    public function companyTimeZone()
+    {
+        $zone = CompanySetting::getSetting('time_zone', $this->company_id);
+
+        return $zone ?: null;
     }
 
     public static function deleteRecurringInvoice($ids)

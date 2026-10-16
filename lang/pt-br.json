@@ -29,6 +29,8 @@
     "to_date": "Até a Data",
     "from": "De",
     "to": "Para",
+    "cc": "CC",
+    "bcc": "BCC",
     "ok": "Geral → Ok",
     "yes": "Sim",
     "no": "Não",
@@ -650,6 +652,7 @@
     "currency": "Moeda",
     "contact": "Contato",
     "category": "Categoria",
+    "uncategorized": "Uncategorized",
     "from_date": "A partir da Data",
     "to_date": "Até a Data",
     "expense_date": "Data",
@@ -1324,7 +1327,8 @@
       "finishing_update": "Atualização de acabamento",
       "update_failed": "Atualização falhou",
       "update_failed_text": "Desculpa! Sua atualização falhou em: {step} step",
-      "update_warning": "Todos os arquivos do aplicativo e modelos padrão serão sobrescritos ao atualizar o aplicativo usando esta ferramenta. Faça backup de seus modelos e banco de dados antes de atualizar."
+      "update_warning": "Todos os arquivos do aplicativo e modelos padrão serão sobrescritos ao atualizar o aplicativo usando esta ferramenta. Faça backup de seus modelos e banco de dados antes de atualizar.",
+      "requirements_not_met": "Update cannot continue because some system requirements are not met (including minimum PHP version). Please fix the failed requirements and try again."
     },
     "backup": {
       "title": "Backup | Backups",
@@ -1646,6 +1650,7 @@
   "pdf_total_tax_label": "IMPOSTOS TOTAIS",
   "pdf_tax_types_label": "Tipos de Impostos",
   "pdf_expenses_label": "Despesas",
+  "pdf_expense_group_total_label": "Group total:",
   "pdf_bill_to": "Cobrar a,",
   "pdf_ship_to": "Envie a,",
   "pdf_received_from": "Remetente:",

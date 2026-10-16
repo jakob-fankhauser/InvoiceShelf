@@ -7,6 +7,10 @@ use App\Facades\PDF;
 use App\Mail\SendInvoiceMail;
 use App\Services\SerialNumberFormatter;
 use App\Space\PdfTemplateUtils;
+use App\Support\DocumentTotals;
+use App\Support\MoneyConversion;
+use App\Support\PublicToken;
+use App\Support\SafeOrderBy;
 use App\Traits\GeneratesPdfTrait;
 use App\Traits\HasCustomFieldsTrait;
 use Carbon\Carbon;
@@ -18,7 +22,6 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Nwidart\Modules\Facades\Module;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
-use Vinkla\Hashids\Facades\Hashids;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class Invoice extends Model implements HasMedia
@@ -58,6 +61,7 @@ class Invoice extends Model implements HasMedia
         'formattedCreatedAt',
         'formattedInvoiceDate',
         'formattedDueDate',
+        'formattedDueAmount',
         'invoicePdfUrl',
     ];
 
@@ -85,7 +89,7 @@ class Invoice extends Model implements HasMedia
 
     public function items(): HasMany
     {
-        return $this->hasMany(\App\Models\InvoiceItem::class);
+        return $this->hasMany(InvoiceItem::class);
     }
 
     public function taxes(): HasMany
@@ -191,6 +195,17 @@ class Invoice extends Model implements HasMedia
         return Carbon::parse($this->due_date)->translatedFormat($dateFormat);
     }
 
+    public function getFormattedDueAmountAttribute($value)
+    {
+        $currency = $this->currency;
+
+        if (! $currency) {
+            $currency = Currency::findOrFail(CompanySetting::getSetting('currency', $this->company_id));
+        }
+
+        return format_money_pdf($this->due_amount, $currency);
+    }
+
     public function getFormattedInvoiceDateAttribute($value)
     {
         $dateFormat = CompanySetting::getSetting('carbon_date_format', $this->company_id);
@@ -248,7 +263,7 @@ class Invoice extends Model implements HasMedia
 
     public function scopeWhereOrder($query, $orderByField, $orderBy)
     {
-        $query->orderBy($orderByField, $orderBy);
+        return SafeOrderBy::apply($query, $orderByField, $orderBy);
     }
 
     public function scopeApplyFilters($query, array $filters)
@@ -277,7 +292,8 @@ class Invoice extends Model implements HasMedia
             $query->where('customer_id', $customerId);
         })->when($filters['orderByField'] ?? null, function ($query, $orderByField) use ($filters) {
             $orderBy = $filters['orderBy'] ?? 'desc';
-            $query->orderBy($orderByField, $orderBy);
+
+            return SafeOrderBy::apply($query, $orderByField, $orderBy);
         }, function ($query) {
             $query->orderBy('sequence_number', 'desc');
         });
@@ -330,7 +346,7 @@ class Invoice extends Model implements HasMedia
 
         $invoice->sequence_number = $serial->nextSequenceNumber;
         $invoice->customer_sequence_number = $serial->nextCustomerSequenceNumber;
-        $invoice->unique_hash = Hashids::connection(Invoice::class)->encode($invoice->id);
+        $invoice->unique_hash = PublicToken::make();
         $invoice->save();
 
         self::createItems($invoice, $request->items);
@@ -379,18 +395,18 @@ class Invoice extends Model implements HasMedia
             return 'customer_cannot_be_changed_after_payment_is_added';
         }
 
-        if ($request->total >= 0 && $request->total < $total_paid_amount) {
+        if ($data['total'] >= 0 && $data['total'] < $total_paid_amount) {
             return 'total_invoice_amount_must_be_more_than_paid_amount';
         }
 
-        if ($oldTotal != $request->total) {
-            $oldTotal = (int) round($request->total) - (int) $oldTotal;
+        if ($oldTotal != $data['total']) {
+            $oldTotal = (int) round($data['total']) - (int) $oldTotal;
         } else {
             $oldTotal = 0;
         }
 
         $data['due_amount'] = ($this->due_amount + $oldTotal);
-        $data['base_due_amount'] = $data['due_amount'] * $data['exchange_rate'];
+        $data['base_due_amount'] = MoneyConversion::toBaseMinor($data['due_amount'], $data['exchange_rate']);
         $data['customer_sequence_number'] = $serial->nextCustomerSequenceNumber;
 
         $this->update($data);
@@ -465,7 +481,14 @@ class Invoice extends Model implements HasMedia
     {
         $data = $this->sendInvoiceData($data);
 
-        \Mail::to($data['to'])->send(new SendInvoiceMail($data));
+        $mail = \Mail::to($data['to']);
+        if (! empty($data['cc'])) {
+            $mail->cc($data['cc']);
+        }
+        if (! empty($data['bcc'])) {
+            $mail->bcc($data['bcc']);
+        }
+        $mail->send(new SendInvoiceMail($data));
 
         if ($this->status == Invoice::STATUS_DRAFT) {
             $this->status = Invoice::STATUS_SENT;
@@ -486,10 +509,13 @@ class Invoice extends Model implements HasMedia
         foreach ($invoiceItems as $invoiceItem) {
             $invoiceItem['company_id'] = $invoice->company_id;
             $invoiceItem['exchange_rate'] = $exchange_rate;
-            $invoiceItem['base_price'] = $invoiceItem['price'] * $exchange_rate;
-            $invoiceItem['base_discount_val'] = $invoiceItem['discount_val'] * $exchange_rate;
-            $invoiceItem['base_tax'] = $invoiceItem['tax'] * $exchange_rate;
-            $invoiceItem['base_total'] = $invoiceItem['total'] * $exchange_rate;
+            // Recompute the item total from price/quantity so a tampered item
+            // total can't desync from the recomputed document totals (GHSA-8c69).
+            $invoiceItem['total'] = DocumentTotals::itemTotal($invoiceItem, $invoice->discount_per_item === 'YES');
+            $invoiceItem['base_price'] = MoneyConversion::toBaseMinor($invoiceItem['price'], $exchange_rate);
+            $invoiceItem['base_discount_val'] = MoneyConversion::toBaseMinor($invoiceItem['discount_val'], $exchange_rate);
+            $invoiceItem['base_tax'] = MoneyConversion::toBaseMinor($invoiceItem['tax'], $exchange_rate);
+            $invoiceItem['base_total'] = MoneyConversion::toBaseMinor($invoiceItem['total'], $exchange_rate);
 
             if (array_key_exists('recurring_invoice_id', $invoiceItem)) {
                 unset($invoiceItem['recurring_invoice_id']);
@@ -501,7 +527,7 @@ class Invoice extends Model implements HasMedia
                 foreach ($invoiceItem['taxes'] as $tax) {
                     $tax['company_id'] = $invoice->company_id;
                     $tax['exchange_rate'] = $invoice->exchange_rate;
-                    $tax['base_amount'] = $tax['amount'] * $exchange_rate;
+                    $tax['base_amount'] = MoneyConversion::toBaseMinor($tax['amount'], $exchange_rate);
                     $tax['currency_id'] = $invoice->currency_id;
 
                     if (gettype($tax['amount']) !== 'NULL') {
@@ -528,7 +554,7 @@ class Invoice extends Model implements HasMedia
         foreach ($taxes as $tax) {
             $tax['company_id'] = $invoice->company_id;
             $tax['exchange_rate'] = $invoice->exchange_rate;
-            $tax['base_amount'] = $tax['amount'] * $exchange_rate;
+            $tax['base_amount'] = MoneyConversion::toBaseMinor($tax['amount'], $exchange_rate);
             $tax['currency_id'] = $invoice->currency_id;
 
             if (gettype($tax['amount']) !== 'NULL') {
@@ -664,7 +690,7 @@ class Invoice extends Model implements HasMedia
     public function addInvoicePayment($amount)
     {
         $this->due_amount += $amount;
-        $this->base_due_amount = $this->due_amount * $this->exchange_rate;
+        $this->base_due_amount = MoneyConversion::toBaseMinor($this->due_amount, $this->exchange_rate);
 
         $this->changeInvoiceStatus($this->due_amount);
     }
@@ -672,7 +698,7 @@ class Invoice extends Model implements HasMedia
     public function subtractInvoicePayment($amount)
     {
         $this->due_amount -= $amount;
-        $this->base_due_amount = $this->due_amount * $this->exchange_rate;
+        $this->base_due_amount = MoneyConversion::toBaseMinor($this->due_amount, $this->exchange_rate);
 
         $this->changeInvoiceStatus($this->due_amount);
     }

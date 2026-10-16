@@ -7,6 +7,10 @@ use App\Facades\PDF;
 use App\Mail\SendEstimateMail;
 use App\Services\SerialNumberFormatter;
 use App\Space\PdfTemplateUtils;
+use App\Support\DocumentTotals;
+use App\Support\MoneyConversion;
+use App\Support\PublicToken;
+use App\Support\SafeOrderBy;
 use App\Traits\GeneratesPdfTrait;
 use App\Traits\HasCustomFieldsTrait;
 use Carbon\Carbon;
@@ -18,7 +22,6 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Str;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
-use Vinkla\Hashids\Facades\Hashids;
 
 class Estimate extends Model implements HasMedia
 {
@@ -79,7 +82,7 @@ class Estimate extends Model implements HasMedia
 
     public function items(): HasMany
     {
-        return $this->hasMany(\App\Models\EstimateItem::class);
+        return $this->hasMany(EstimateItem::class);
     }
 
     public function customer(): BelongsTo
@@ -89,12 +92,12 @@ class Estimate extends Model implements HasMedia
 
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'creator_id');
+        return $this->belongsTo(User::class, 'creator_id');
     }
 
     public function company(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Company::class);
+        return $this->belongsTo(Company::class);
     }
 
     public function currency(): BelongsTo
@@ -194,7 +197,7 @@ class Estimate extends Model implements HasMedia
 
     public function scopeWhereOrder($query, $orderByField, $orderBy)
     {
-        $query->orderBy($orderByField, $orderBy);
+        return SafeOrderBy::apply($query, $orderByField, $orderBy);
     }
 
     public function scopeWhereCompany($query)
@@ -225,7 +228,7 @@ class Estimate extends Model implements HasMedia
         }
 
         $estimate = self::create($data);
-        $estimate->unique_hash = Hashids::connection(Estimate::class)->encode($estimate->id);
+        $estimate->unique_hash = PublicToken::make();
         $serial = (new SerialNumberFormatter)
             ->setModel($estimate)
             ->setCompany($estimate->company_id)
@@ -316,10 +319,12 @@ class Estimate extends Model implements HasMedia
         foreach ($estimateItems as $estimateItem) {
             $estimateItem['company_id'] = $request->header('company');
             $estimateItem['exchange_rate'] = $exchange_rate;
-            $estimateItem['base_price'] = $estimateItem['price'] * $exchange_rate;
-            $estimateItem['base_discount_val'] = $estimateItem['discount_val'] * $exchange_rate;
-            $estimateItem['base_tax'] = $estimate['tax'] * $exchange_rate;
-            $estimateItem['base_total'] = $estimateItem['total'] * $exchange_rate;
+            // Recompute the item total from price/quantity (GHSA-8c69).
+            $estimateItem['total'] = DocumentTotals::itemTotal($estimateItem, $estimate->discount_per_item === 'YES');
+            $estimateItem['base_price'] = MoneyConversion::toBaseMinor($estimateItem['price'], $exchange_rate);
+            $estimateItem['base_discount_val'] = MoneyConversion::toBaseMinor($estimateItem['discount_val'], $exchange_rate);
+            $estimateItem['base_tax'] = MoneyConversion::toBaseMinor($estimateItem['tax'] ?? 0, $exchange_rate);
+            $estimateItem['base_total'] = MoneyConversion::toBaseMinor($estimateItem['total'], $exchange_rate);
 
             $item = $estimate->items()->create($estimateItem);
 
@@ -327,6 +332,9 @@ class Estimate extends Model implements HasMedia
                 foreach ($estimateItem['taxes'] as $tax) {
                     if (gettype($tax['amount']) !== 'NULL') {
                         $tax['company_id'] = $request->header('company');
+                        $tax['exchange_rate'] = $exchange_rate;
+                        $tax['currency_id'] = $estimate->currency_id;
+                        $tax['base_amount'] = MoneyConversion::toBaseMinor($tax['amount'], $exchange_rate);
                         $item->taxes()->create($tax);
                     }
                 }
@@ -346,7 +354,7 @@ class Estimate extends Model implements HasMedia
             if (gettype($tax['amount']) !== 'NULL') {
                 $tax['company_id'] = $request->header('company');
                 $tax['exchange_rate'] = $exchange_rate;
-                $tax['base_amount'] = $tax['amount'] * $exchange_rate;
+                $tax['base_amount'] = MoneyConversion::toBaseMinor($tax['amount'], $exchange_rate);
                 $tax['currency_id'] = $estimate->currency_id;
 
                 $estimate->taxes()->create($tax);
@@ -374,7 +382,14 @@ class Estimate extends Model implements HasMedia
             $this->save();
         }
 
-        \Mail::to($data['to'])->send(new SendEstimateMail($data));
+        $mail = \Mail::to($data['to']);
+        if (! empty($data['cc'])) {
+            $mail->cc($data['cc']);
+        }
+        if (! empty($data['bcc'])) {
+            $mail->bcc($data['bcc']);
+        }
+        $mail->send(new SendEstimateMail($data));
 
         return [
             'success' => true,

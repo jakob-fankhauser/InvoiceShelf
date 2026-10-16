@@ -7,8 +7,9 @@ composer:
 npm-build:
 	rm -r public/build 2> /dev/null || true
 	rm -r node_modules 2> /dev/null || true
-	npm install
-	npm run build
+	corepack enable
+	pnpm install --frozen-lockfile
+	pnpm build
 
 dist-gen: clean composer npm-build
 	@echo "packaging..."
@@ -35,7 +36,7 @@ dist-gen: clean composer npm-build
 	@cp -r composer.json                    InvoiceShelf
 	@cp -r composer.lock                    InvoiceShelf
 	@cp -r LICENSE                          InvoiceShelf
-	@cp -r readme.md                        InvoiceShelf
+	@cp -r README.md                        InvoiceShelf
 	@cp -r SECURITY.md                      InvoiceShelf
 	@cp -r server.php                       InvoiceShelf
 	@touch InvoiceShelf/storage/logs/laravel.log
