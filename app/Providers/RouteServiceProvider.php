@@ -53,5 +53,15 @@ class RouteServiceProvider extends ServiceProvider
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60);
         });
+
+        // Eigene Zähler für Login-Versuche. Ein unbenanntes "throttle:10,1"
+        // teilt sich den Zähler mit dem globalen API-Limit und zählt doppelt.
+        RateLimiter::for('mobile-login', function (Request $request) {
+            return Limit::perMinute(10)->by('mobile-login|'.$request->ip());
+        });
+
+        RateLimiter::for('two-factor', function (Request $request) {
+            return Limit::perMinute(5)->by('two-factor|'.$request->session()->get('login.id').'|'.$request->ip());
+        });
     }
 }
