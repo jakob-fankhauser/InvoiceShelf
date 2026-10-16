@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use PragmaRX\Google2FA\Google2FA;
 
 class AuthController extends Controller
 {
@@ -20,6 +21,18 @@ class AuthController extends Controller
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
+        }
+
+        // Ohne diese Prüfung hebelte der Token-Login die 2FA komplett aus:
+        // Das Passwort allein reichte für einen vollwertigen API-Token.
+        if ($user->hasTwoFactorEnabled()) {
+            $code = (string) $request->input('code', '');
+
+            if ($code === '' || ! (new Google2FA)->verifyKey($user->two_factor_secret, $code)) {
+                throw ValidationException::withMessages([
+                    'code' => ['A valid two-factor authentication code is required.'],
+                ]);
+            }
         }
 
         return response()->json([

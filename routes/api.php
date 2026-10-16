@@ -145,7 +145,8 @@ Route::prefix('/v1')->group(function () {
     // ----------------------------------
 
     Route::prefix('auth')->group(function () {
-        Route::post('login', [AuthController::class, 'login']);
+        // Token-Login (Mobile-App): ohne Limit ließen sich Passwörter beliebig oft probieren
+        Route::post('login', [AuthController::class, 'login'])->middleware('throttle:mobile-login');
 
         Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 

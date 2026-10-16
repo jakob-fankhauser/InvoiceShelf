@@ -33,7 +33,8 @@ Route::get('/modules/scripts/{script}', ScriptController::class);
 
 Route::post('login', [LoginController::class, 'login']);
 
-Route::post('two-factor-challenge', [TwoFactorController::class, 'challenge']);
+// Limit gegen Durchprobieren der 6-stelligen Codes (siehe RouteServiceProvider)
+Route::post('two-factor-challenge', [TwoFactorController::class, 'challenge'])->middleware('throttle:two-factor');
 
 Route::post('auth/logout', function () {
     Auth::guard('web')->logout();
