@@ -50,7 +50,7 @@ export const useAuthStore = (useWindow = false) => {
 
       verifyTwoFactor(data) {
         return new Promise((resolve, reject) => {
-          axios
+          http
             .post('/two-factor-challenge', data)
             .then((response) => {
               this.requiresTwoFactor = false

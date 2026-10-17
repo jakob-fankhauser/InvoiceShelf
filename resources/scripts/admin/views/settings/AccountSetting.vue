@@ -203,7 +203,7 @@
 </template>
 
 <script setup>
-import axios from 'axios'
+import http from '@/scripts/http'
 import { ref, computed, reactive } from 'vue'
 import { useGlobalStore } from '@/scripts/admin/stores/global'
 import { useUserStore } from '@/scripts/admin/stores/user'
@@ -364,7 +364,7 @@ async function updateUserData() {
 async function enableTwoFactor() {
   isEnabling.value = true
   try {
-    const response = await axios.post('/api/v1/me/two-factor/enable')
+    const response = await http.post('/api/v1/me/two-factor/enable')
     qrCodeSvg.value = response.data.qr_code_svg
     secret.value = response.data.secret
     setupStep.value = 'qr'
@@ -378,7 +378,7 @@ async function confirmTwoFactor() {
   confirmError.value = ''
   isConfirming.value = true
   try {
-    const response = await axios.post('/api/v1/me/two-factor/confirm', {
+    const response = await http.post('/api/v1/me/two-factor/confirm', {
       code: confirmCode.value,
     })
     recoveryCodes.value = response.data.recovery_codes
@@ -394,7 +394,7 @@ async function disableTwoFactor() {
   disableError.value = ''
   isDisabling.value = true
   try {
-    await axios.post('/api/v1/me/two-factor/disable', {
+    await http.post('/api/v1/me/two-factor/disable', {
       password: disablePassword.value,
     })
     disablePassword.value = ''
