@@ -1,5 +1,8 @@
 services:
   webapp:
+    # Keine Rechte-Ausweitung über setuid-Programme im Container
+    security_opt:
+      - no-new-privileges:true
     # Obergrenzen, damit ein Dienst nicht den ganzen Server belegt
     mem_limit: 768m
     cpus: 1.5
