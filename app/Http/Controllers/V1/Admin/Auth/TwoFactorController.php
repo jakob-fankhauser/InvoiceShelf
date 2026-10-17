@@ -16,7 +16,7 @@ class TwoFactorController extends Controller
     public function enable(Request $request)
     {
         $user = $request->user();
-        $google2fa = new Google2FA();
+        $google2fa = new Google2FA;
 
         $secret = $google2fa->generateSecretKey();
 
@@ -46,7 +46,7 @@ class TwoFactorController extends Controller
         ]);
 
         $user = $request->user();
-        $google2fa = new Google2FA();
+        $google2fa = new Google2FA;
 
         if (! $user->two_factor_secret) {
             return response()->json(['message' => 'Two-factor authentication has not been enabled.'], 422);
@@ -105,7 +105,7 @@ class TwoFactorController extends Controller
         $user = User::findOrFail($userId);
 
         if ($request->code) {
-            $google2fa = new Google2FA();
+            $google2fa = new Google2FA;
             $valid = $google2fa->verifyKey($user->two_factor_secret, $request->code);
 
             if (! $valid) {

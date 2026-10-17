@@ -1,5 +1,8 @@
 services:
   webapp:
+    # Obergrenzen, damit ein Dienst nicht den ganzen Server belegt
+    mem_limit: 768m
+    cpus: 1.5
     container_name: invoiceshelf-variant-sqlite
     build:
       context: ../../
