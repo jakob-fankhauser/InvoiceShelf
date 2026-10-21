@@ -11,7 +11,7 @@ FROM --platform=$BUILDPLATFORM node:24 AS static_builder
 # so move this to each new v5 release to pick up PHP and Alpine security fixes,
 # and read the migration guide before a major:
 # https://serversideup.net/open-source/docker-php/docs/guide/major-version-migrations
-FROM serversideup/php:8.4-fpm-nginx-alpine-v5.0.1 AS base
+FROM serversideup/php:8.4-fpm-nginx-alpine-v5.0.2 AS base
     USER root
     RUN apk add --no-cache bash nano mariadb-client postgresql-client sqlite
     # One invocation, not twelve: the tool sets up and tears down its build
