@@ -1,0 +1,25 @@
+# Dependabot: wöchentliche Update-PRs (montags). Ein Merge auf den Haupt-
+# branch baut die Seite in Dokploy automatisch neu.
+# Das PHP-Base-Image ist mit Tag + Digest gepinnt: Dependabot meldet damit
+# neue PHP-Patch-Versionen und neu gebaute Images (Debian-Sicherheitsfixes).
+# Sicherheitslücken in Abhängigkeiten meldet GitHub zusätzlich sofort.
+version: 2
+updates:
+  - package-ecosystem: docker
+    directory: "/docker/production"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Vienna
+    commit-message:
+      prefix: "chore(deps)"
+    ignore:
+      # Nur Patch- und Digest-Updates; Wechsel auf eine neue PHP-/Node-
+      # Version bewusst als eigenes, getestetes Projekt
+      - dependency-name: "php"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "wordpress"
+        update-types: ["version-update:semver-major"]
