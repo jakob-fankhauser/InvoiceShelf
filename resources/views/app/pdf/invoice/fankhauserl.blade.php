@@ -105,7 +105,7 @@
             line-height: 15px;
             color: #595959;
             margin-top: 5px;
-            width: 160px;
+            width: 260px;
             word-wrap: break-word;
         }
 
@@ -426,9 +426,9 @@
         <div class="main-content">
             <div class="customer-address-container">
                 <div class="billing-address-container billing-address">
-                    @if ($billing_address)
+                    @if ($invoice->customer)
                         <b>@lang('pdf_bill_to')</b> <br>
-                        {!! $billing_address !!}
+                        @include('app.pdf.partials.fankhauser-recipient', ['customer' => $invoice->customer])
                     @endif
                 </div>
 
@@ -449,6 +449,12 @@
                         <td class="attribute-label">@lang('pdf_invoice_due_date')</td>
                         <td class="attribute-value"> &nbsp;{{ $invoice->formattedDueDate }}</td>
                     </tr>
+                    @if(filled($invoice->reference_number))
+                    <tr>
+                        <td class="attribute-label">Bestellnummer</td>
+                        <td class="attribute-value"> &nbsp;{{ $invoice->reference_number }}</td>
+                    </tr>
+                    @endif
                 </table>
             </div>
             <div style="clear: both;"></div>
@@ -642,10 +648,21 @@
 
 <br>
 
-        {{-- Tax Notice for Kleinunternehmer --}}
-     <div class="tax-notice">
-    <strong>Kleinunternehmerregelung:</strong> Gemäß § 19a UStG (EU-Kleinunternehmerregelung) wird keine Umsatzsteuer ausgewiesen.
+@if ($notes)
+<div class="notes">
+    <div class="notes-label">@lang('pdf_notes')</div>
+    {!! $notes !!}
 </div>
+@endif
+
+@php
+    $taxNotice = \App\Support\SmallBusinessTaxNotice::for($invoice->tax);
+@endphp
+@if ($taxNotice)
+<div class="tax-notice">
+    <strong>Umsatzsteuer:</strong> {{ $taxNotice }}
+</div>
+@endif
 
 
 {{-- QR-Code für Überweisung --}}
