@@ -428,25 +428,7 @@
                 <div style="font-size: 18px; font-weight: bold; color: #00C2A8; margin-bottom: 8px; letter-spacing: 0.05em;">ANGEBOT</div>
                 <div class="billing-address-container billing-address">
                     <b>An:</b> <br>
-                @if($estimate->customer)
-                    <strong>{{ $estimate->customer->name }}</strong><br>
-                    @if($estimate->customer->billingAddress)
-                        @if($estimate->customer->billingAddress->address_street_1)
-                            {{ $estimate->customer->billingAddress->address_street_1 }}<br>
-                        @endif
-                        @if($estimate->customer->billingAddress->zip || $estimate->customer->billingAddress->city)
-                            {{ $estimate->customer->billingAddress->zip }} {{ $estimate->customer->billingAddress->city }}<br>
-                        @endif
-                        @if($estimate->customer->billingAddress->country)
-                            @php
-                                $countryCode = $estimate->customer->billingAddress->country->code ?? null;
-                                $countryNamesDE = ['AT' => 'Österreich', 'DE' => 'Deutschland'];
-                                $countryName = $countryNamesDE[$countryCode] ?? $estimate->customer->billingAddress->country->name ?? '';
-                            @endphp
-                            {{ $countryName }}
-                        @endif
-                    @endif
-                @endif
+                @include('app.pdf.partials.fankhauser-recipient', ['customer' => $estimate->customer])
                 </div>
 
                 <div style="clear: both;"></div>
@@ -647,10 +629,21 @@
 
 <br>
 
-        {{-- Tax Notice for Kleinunternehmer --}}
-     <div class="tax-notice">
-    <strong>Kleinunternehmerregelung:</strong> Gemäß § 19a UStG (EU-Kleinunternehmerregelung) wird keine Umsatzsteuer ausgewiesen.
+@if ($notes)
+<div class="notes">
+    <div class="notes-label">@lang('pdf_notes')</div>
+    {!! $notes !!}
 </div>
+@endif
+
+@php
+    $taxNotice = \App\Support\SmallBusinessTaxNotice::for($estimate->tax);
+@endphp
+@if ($taxNotice)
+<div class="tax-notice">
+    <strong>Umsatzsteuer:</strong> {{ $taxNotice }}
+</div>
+@endif
 
 
        {{-- Footer with bank and contact info --}}
